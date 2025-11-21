@@ -1,0 +1,136 @@
+{
+  "meta": {
+    "subject": "Chimica e Propedeutica Biochimica",
+    "source": "DM 418/2025 Allegato Syllabus",
+    "total_cfu": 6,
+    "version": "1.0"
+  },
+  "units": [
+    {
+      "id": "chem_01_matter_atom",
+      "title": "Struttura della Materia e Atomo",
+      "exam_weight": 3,
+      "primary_competency": "CHEM_BOND_REDOX",
+      "topics": [
+        "Particelle elementari (protone, neutrone, elettrone)",
+        "Numero atomico (Z) e Numero di massa (A)",
+        "Isotopi e peso atomico medio",
+        "Configurazione elettronica e principio di Aufbau",
+        "Numeri quantici e forma degli orbitali (s, p, d, f)",
+        "Tavola periodica: gruppi, periodi e proprietà periodiche (Raggio, Energia Ionizzazione, Elettronegatività)"
+      ]
+    },
+    {
+      "id": "chem_02_bonding",
+      "title": "Legame Chimico e Interazioni",
+      "exam_weight": 4,
+      "primary_competency": "CHEM_BOND_REDOX",
+      "secondary_competency": "CHEM_STRUCTURAL_ORG",
+      "topics": [
+        "Legame ionico e covalente (puro e polare)",
+        "Strutture di Lewis e regola dell'ottetto",
+        "Geometria molecolare (VSEPR)",
+        "Ibridazione del carbonio (sp3, sp2, sp)",
+        "Legame dativo",
+        "Interazioni deboli: Idrogeno, Van der Waals, Dipolo-Dipolo (Importanza biologica)"
+      ]
+    },
+    {
+      "id": "chem_03_stoichiometry",
+      "title": "Stechiometria e Soluzioni",
+      "exam_weight": 5,
+      "primary_competency": "CHEM_STOICHIOMETRY_PH",
+      "topics": [
+        "Concetto di Mole e Numero di Avogadro",
+        "Calcolo massa molare e conversioni grammi/moli",
+        "Bilanciamento reazioni (coefficienti stechiometrici)",
+        "Concentrazioni: Molarità, Molalità, % p/p, % p/v, Frazione molare",
+        "Diluizioni (M1V1 = M2V2)",
+        "Proprietà colligative: Osmosi e Pressione Osmotica (Applicazione isotonica/ipertonica)"
+      ]
+    },
+    {
+      "id": "chem_04_kinetics_thermo",
+      "title": "Cinetica, Equilibrio e Termodinamica",
+      "exam_weight": 3,
+      "primary_competency": "CHEM_THERMO_BIO",
+      "topics": [
+        "Velocità di reazione e Ordine di reazione",
+        "Energia di attivazione e Catalizzatori (Enzimi)",
+        "Equilibrio chimico (Kc, Kp) e Legge di Azione di Massa",
+        "Principio di Le Chatelier",
+        "Entalpia, Entropia ed Energia Libera di Gibbs (Spontaneità)",
+        "Reazioni esoergoniche ed endoergoniche (Accoppiamento energetico ATP)"
+      ]
+    },
+    {
+      "id": "chem_05_acids_bases",
+      "title": "Acidi, Basi e pH",
+      "exam_weight": 5,
+      "primary_competency": "CHEM_STOICHIOMETRY_PH",
+      "topics": [
+        "Definizioni: Arrhenius, Bronsted-Lowry, Lewis",
+        "Acidi e basi forti vs deboli (Ka, Kb)",
+        "Autoionizzazione dell'acqua (Kw) e scala pH/pOH",
+        "Calcolo pH acidi/basi forti",
+        "Idrolisi salina",
+        "Soluzioni Tampone: Equazione di Henderson-Hasselbalch",
+        "Sistemi tampone fisiologici (Bicarbonato, Fosfato, Proteine)"
+      ]
+    },
+    {
+      "id": "chem_06_redox",
+      "title": "Elettrochimica e Redox",
+      "exam_weight": 3,
+      "primary_competency": "CHEM_BOND_REDOX",
+      "topics": [
+        "Numero di ossidazione (regole di assegnazione)",
+        "Bilanciamento Redox (metodo semireazioni)",
+        "Pile ed Elettrolisi (cenni)",
+        "Equazione di Nernst e potenziali di riduzione standard"
+      ]
+    },
+    {
+      "id": "chem_07_organic_hydrocarbons",
+      "title": "Organica: Idrocarburi e Nomenclatura",
+      "exam_weight": 4,
+      "primary_competency": "CHEM_NOMENCLATURE_EXACT",
+      "secondary_competency": "CHEM_STRUCTURAL_ORG",
+      "topics": [
+        "Alcani e Cicloalcani: Conformazioni e Nomenclatura IUPAC",
+        "Alcheni e Alchini: Isomeria geometrica (Cis/Trans, E/Z)",
+        "Areni (Benzene): Risonanza e Aromaticità",
+        "Alogenuri alchilici (Sostituzione Nucleofila SN1/SN2 cenni)",
+        "Isomeria strutturale e Stereoisomeria (Enantiomeri, Carboni chirali, R/S)"
+      ]
+    },
+    {
+      "id": "chem_08_organic_functional",
+      "title": "Organica: Gruppi Funzionali",
+      "exam_weight": 5,
+      "primary_competency": "CHEM_REACTIVITY_MECH",
+      "secondary_competency": "CHEM_NOMENCLATURE_EXACT",
+      "topics": [
+        "Alcoli, Fenoli, Eteri: Acidità e ossidazione",
+        "Aldeidi e Chetoni: Il gruppo carbonilico, addizione nucleofila, emiacetali",
+        "Acidi Carbossilici: Acidità e derivati (Esteri, Ammidi, Anidridi)",
+        "Ammine: Basicità e classificazione",
+        "Composti eterociclici di interesse biologico (Pirimidine, Purine, Pirrolo, Imidazolo)"
+      ]
+    },
+    {
+      "id": "chem_09_proped_biochem",
+      "title": "Propedeutica Biochimica",
+      "exam_weight": 5,
+      "primary_competency": "CHEM_STRUCTURAL_ORG",
+      "secondary_competency": "CHEM_REACTIVITY_MECH",
+      "topics": [
+        "Carboidrati: Monosaccaridi (Fischer/Haworth), Disaccaridi (Legame glicosidico), Polisaccaridi (Amido, Glicogeno, Cellulosa)",
+        "Lipidi: Acidi grassi (saturi/insaturi), Trigliceridi (Esterificazione), Fosfolipidi, Steroidi (Colesterolo)",
+        "Amminoacidi: Struttura generale, Punto isoelettrico, Classificazione R",
+        "Proteine: Legame peptidico (caratteristiche), Struttura primaria, secondaria, terziaria, quaternaria",
+        "Nucleotidi: Struttura (Base+Zucchero+P), Legame fosfodiesterico, ATP come carrier"
+      ]
+    }
+  ]
+}

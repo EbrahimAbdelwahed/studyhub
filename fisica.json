@@ -1,0 +1,105 @@
+{
+  "meta": {
+    "subject": "Fisica",
+    "source": "DM 418/2025 Allegato Syllabus",
+    "total_cfu": 6,
+    "version": "1.0"
+  },
+  "units": [
+    {
+      "id": "phys_01_measures",
+      "title": "Misure e Grandezze",
+      "exam_weight": 2,
+      "primary_competency": "PHYS_NUMERICAL_SOLVING",
+      "topics": [
+        "Sistema Internazionale (SI) e conversioni unità di misura",
+        "Analisi dimensionale",
+        "Grandezze scalari e vettoriali",
+        "Operazioni con vettori (Somma, Sottrazione, Prodotto scalare/vettoriale)",
+        "Errori di misura e cifre significative"
+      ]
+    },
+    {
+      "id": "phys_02_kinematics_dynamics",
+      "title": "Cinematica e Dinamica",
+      "exam_weight": 3,
+      "primary_competency": "PHYS_NUMERICAL_SOLVING",
+      "secondary_competency": "PHYS_LAW_RECALL",
+      "topics": [
+        "Moto rettilineo uniforme e uniformemente accelerato",
+        "Moto circolare uniforme (velocità angolare, frequenza)",
+        "Principi della Dinamica (leggi di Newton)",
+        "Forza peso, reazione vincolare, attrito, forza elastica",
+        "Lavoro, Potenza ed Energia Cinetica",
+        "Forze conservative ed Energia Potenziale",
+        "Teorema di conservazione dell'Energia Meccanica",
+        "Quantità di moto e urti (cenni)"
+      ]
+    },
+    {
+      "id": "phys_03_fluids",
+      "title": "Meccanica dei Fluidi (Biofisica)",
+      "exam_weight": 5,
+      "primary_competency": "PHYS_BIO_APPLICATION",
+      "secondary_competency": "PHYS_NUMERICAL_SOLVING",
+      "topics": [
+        "Densità e Pressione (Pascal, Stevino)",
+        "Principio di Archimede",
+        "Portata ed equazione di continuità (Sistema cardiovascolare)",
+        "Teorema di Bernoulli (Fluidi ideali)",
+        "Viscosità e Legge di Poiseuille (Fluidi reali/Sangue)",
+        "Regime laminare vs turbolento (Numero di Reynolds)",
+        "Tensione superficiale e capillarità (Legge di Laplace)"
+      ]
+    },
+    {
+      "id": "phys_04_thermo",
+      "title": "Termodinamica",
+      "exam_weight": 4,
+      "primary_competency": "PHYS_LAW_RECALL",
+      "secondary_competency": "PHYS_NUMERICAL_SOLVING",
+      "topics": [
+        "Temperatura e scale termometriche",
+        "Calore, calore specifico e capacità termica",
+        "Cambiamenti di stato e calore latente",
+        "Equazione di stato dei gas perfetti",
+        "Primo principio della termodinamica (Lavoro, Energia interna)",
+        "Trasformazioni termodinamiche (Isocora, Isobara, Isoterma, Adiabatica)",
+        "Secondo principio ed Entropia"
+      ]
+    },
+    {
+      "id": "phys_05_electrostatics",
+      "title": "Elettrostatica e Circuiti",
+      "exam_weight": 4,
+      "primary_competency": "PHYS_NUMERICAL_SOLVING",
+      "secondary_competency": "PHYS_BIO_APPLICATION",
+      "topics": [
+        "Legge di Coulomb e Campo Elettrico",
+        "Potenziale elettrico e differenza di potenziale",
+        "Condensatori in serie e parallelo (Capacità)",
+        "Corrente elettrica (Intensità)",
+        "Legge di Ohm (I e II)",
+        "Resistenze in serie e parallelo",
+        "Effetto Joule e Potenza elettrica",
+        "Cenni ai potenziali di membrana e conduzione nervosa"
+      ]
+    },
+    {
+      "id": "phys_06_magnetism_waves",
+      "title": "Magnetismo, Onde e Ottica",
+      "exam_weight": 3,
+      "primary_competency": "PHYS_LAW_RECALL",
+      "secondary_competency": "PHYS_BIO_APPLICATION",
+      "topics": [
+        "Campo magnetico e Forza di Lorentz",
+        "Onde: Periodo, Frequenza, Lunghezza d'onda",
+        "Suono e Acustica (Intensità, Decibel)",
+        "Spettro elettromagnetico",
+        "Riflessione e Rifrazione (Legge di Snell)",
+        "Lenti sottili ed equazione dei punti coniugati",
+        "Occhio umano e difetti visivi (Miopia, Ipermetropia, correzione)"
+      ]
+    }
+  ]
+}
