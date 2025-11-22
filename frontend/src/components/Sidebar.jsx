@@ -1,6 +1,6 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
-import { LayoutDashboard, Play, Activity, ListTree, Cpu, BookOpen } from 'lucide-react';
+import { LayoutDashboard, Play, Activity, ListTree, Cpu, BookOpen, GraduationCap } from 'lucide-react';
 import '../styles/global.css';
 
 const Sidebar = () => {
@@ -16,7 +16,9 @@ const Sidebar = () => {
   return (
     <nav className="sidebar">
       <div className="logo-container">
-        <div className="logo">M19</div>
+        <div className="logo">
+          <GraduationCap size={24} />
+        </div>
       </div>
 
       <div className="nav-links">
@@ -53,9 +55,9 @@ const Sidebar = () => {
         }
         
         .logo {
-          width: 40px;
-          height: 40px;
-          background: var(--color-primary);
+          width: 48px;
+          height: 48px;
+          background: linear-gradient(135deg, var(--color-primary), #7C3AED);
           border-radius: var(--radius-lg);
           display: flex;
           align-items: center;
@@ -63,7 +65,12 @@ const Sidebar = () => {
           font-weight: 700;
           color: white;
           font-size: 0.875rem;
-          box-shadow: var(--shadow-glow);
+          box-shadow: 0 4px 12px rgba(124, 58, 237, 0.3);
+          transition: transform var(--transition-fast);
+        }
+
+        .logo:hover {
+          transform: scale(1.05);
         }
         
         .nav-links {
