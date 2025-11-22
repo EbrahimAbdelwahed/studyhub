@@ -3,14 +3,14 @@
   "builds": [
     {
       "src": "frontend/package.json",
-      "use": "@vercel/static-build@2.7.4",
+      "use": "@vercel/static-build",
       "config": {
         "distDir": "dist"
       }
     },
     {
       "src": "api/index.py",
-      "use": "@vercel/python@4.6.1"
+      "use": "@vercel/python"
     }
   ],
   "routes": [
