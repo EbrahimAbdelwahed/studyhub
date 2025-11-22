@@ -350,6 +350,7 @@ def delete_card(card_id: str):
 
 
 @app.post("/maintenance/heal-mcq-cloze")
+@app.post("/api/maintenance/heal-mcq-cloze")  # alias to survive double-prefix setups
 def heal_mcq_cloze(try_infer: bool = True, model: str = "gpt-5.1", limit: int = 200):
     """
     Sanitize existing MCQ cards missing cloze_part by inferring the correct option
