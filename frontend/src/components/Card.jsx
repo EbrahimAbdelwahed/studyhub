@@ -67,53 +67,70 @@ const Card = ({ card, onAnswer }) => {
             )}
           </div>
 
-          <div className="question">
-            {card.question}
-          </div>
-
-          <div className="input-area">
-            {card.type === 'CLOZE' ? (
-              <input
-                type="text"
-                value={answer}
-                onChange={(e) => setAnswer(e.target.value)}
-                onKeyDown={handleKeyDown}
-                placeholder="Type your answer..."
-                className="cloze-input"
-                autoFocus
-                disabled={status !== 'idle'}
-              />
-            ) : (
-              <div className="mcq-options">
-                {card.mcq_options?.map((option) => (
-                  <button
-                    key={option}
-                    onClick={() => setAnswer(option)}
-                    className={`mcq-option ${answer === option ? 'selected' : ''}`}
-                    disabled={status !== 'idle'}
-                  >
-                    {option}
-                  </button>
-                ))}
+          {/* Validation Check for Broken Cards */}
+          {card.type === 'MCQ' && !card.cloze_part ? (
+            <div className="error-state">
+              <AlertTriangle size={48} className="text-red-500 mb-4" />
+              <h3 className="text-xl font-bold text-red-500">Card Error</h3>
+              <p className="text-muted mt-2">Missing answer key. This card cannot be graded.</p>
+              <button
+                onClick={() => onAnswer('skip', 0)}
+                className="mt-6 px-4 py-2 bg-slate-700 hover:bg-slate-600 rounded text-white transition-colors"
+              >
+                Skip Card
+              </button>
+            </div>
+          ) : (
+            <>
+              <div className="question">
+                {card.question}
               </div>
-            )}
-          </div>
 
-          <div className="actions">
-            <button
-              className="submit-btn"
-              onClick={handleSubmit}
-              disabled={!answer || status !== 'idle'}
-            >
-              {status === 'idle' ? (
-                <>Submit <ArrowRight size={18} /></>
-              ) : status === 'correct' ? (
-                <>Correct <Check size={18} /></>
-              ) : (
-                <>Wrong <X size={18} /></>
-              )}
-            </button>
-          </div>
+              <div className="input-area">
+                {card.type === 'CLOZE' ? (
+                  <input
+                    type="text"
+                    value={answer}
+                    onChange={(e) => setAnswer(e.target.value)}
+                    onKeyDown={handleKeyDown}
+                    placeholder="Type your answer..."
+                    className="cloze-input"
+                    autoFocus
+                    disabled={status !== 'idle'}
+                  />
+                ) : (
+                  <div className="mcq-options">
+                    {card.mcq_options?.map((option) => (
+                      <button
+                        key={option}
+                        onClick={() => setAnswer(option)}
+                        className={`mcq-option ${answer === option ? 'selected' : ''}`}
+                        disabled={status !== 'idle'}
+                      >
+                        {option}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              <div className="actions">
+                <button
+                  className="submit-btn"
+                  onClick={handleSubmit}
+                  disabled={!answer || status !== 'idle'}
+                >
+                  {status === 'idle' ? (
+                    <>Submit <ArrowRight size={18} /></>
+                  ) : status === 'correct' ? (
+                    <>Correct <Check size={18} /></>
+                  ) : (
+                    <>Wrong <X size={18} /></>
+                  )}
+                </button>
+              </div>
+            </>
+          )}
 
           {status === 'wrong' && card.cloze_part && (
             <motion.div
@@ -303,6 +320,15 @@ const Card = ({ card, onAnswer }) => {
           padding: var(--spacing-md);
           border-radius: var(--radius-md);
           border: 1px solid var(--color-danger);
+        }
+
+        .error-state {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: var(--spacing-2xl);
+            text-align: center;
         }
       `}</style>
     </div>

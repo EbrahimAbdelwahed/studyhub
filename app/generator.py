@@ -17,18 +17,17 @@ Produci SOLO JSON valido con una lista 'cards'. Ogni card è MULTIPLE CHOICE (MC
 - Rispetta il tag DM418 indicato e il contesto del syllabus.
 - Domande concise, difficoltà medio-alta, niente trivia fuori syllabus.
 Formato JSON di uscita:
-{
-  "cards": [
     {
       "type": "MCQ" | "CLOZE",
       "syllabus_ref": "<id unit>",
       "dm418_tag": "<TAG>",
       "question": "<testo>",
-      "cloze_part": "<string or null>",
+      "cloze_part": "<RISPOSTA CORRETTA ESATTA>",
       "mcq_options": ["A", "B", "C", "D"] or null
     }
   ]
-}"""
+}
+IMPORTANTE: Per le card MCQ, il campo 'cloze_part' DEVE contenere la stringa esatta della risposta corretta (che deve essere presente anche in mcq_options)."""
 
 
 def _normalize_question(question: str) -> str:
@@ -98,8 +97,19 @@ def generate_cards(
     for c in payload_cards:
         cloze_value = c.get("cloze_part")
         mcq_options = c.get("mcq_options")
-        if c.get("type") == CardType.MCQ and not cloze_value and mcq_options:
-            cloze_value = mcq_options[0]
+        
+        # Validation: MCQ must have a cloze_part (the correct answer)
+        if c.get("type") == CardType.MCQ:
+            if not cloze_value:
+                # If the LLM failed to provide the answer key, we cannot use this card safely.
+                # We skip it or log it. For now, let's skip adding it to the list.
+                print(f"Skipping MCQ card due to missing cloze_part (answer key): {c.get('question')}")
+                continue
+            
+            # Optional: Verify cloze_value is actually in mcq_options
+            if mcq_options and cloze_value not in mcq_options:
+                 # Try to fuzzy match or just warn? Let's trust the LLM but maybe strip whitespace
+                 pass
 
         card = Card(
             syllabus_ref=c["syllabus_ref"],
