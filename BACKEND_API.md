@@ -4,6 +4,11 @@
 - Python 3.11 o 3.12 (PyO3/pydantic-core non supporta 3.13/3.14), `pip install -r requirements.txt`
 - Env: `OPENAI_API_KEY` (obbligatorio), opzionale `OPENAI_BASE_URL`, `MEDSPRINT_DB_PATH` (default `medsprint.db`).
 - Avvio: `uvicorn app.main:app --reload --port 8000`
+- Deploy serverless (Vercel):
+  - Usa Postgres gestito e imposta `DATABASE_URL` (fallback a SQLite solo in locale).
+  - File `api/index.py` + `mangum` forniscono l'handler AWS-style.
+  - `vercel.json` è già pronto; configura i secret `DATABASE_URL`, `OPENAI_API_KEY`, opzionale `OPENAI_BASE_URL`.
+  - Per il batch notturno usa un cron Vercel che chiama `POST /generator/run`.
 
 ## State Machine & Scheduling
 - Stati: `NEW`, `CRITICAL`, `CONFIRMATION`, `CONSOLIDATION` (+ `consolidation_level` 1-3).
