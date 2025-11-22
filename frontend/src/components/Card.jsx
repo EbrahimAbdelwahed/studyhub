@@ -19,7 +19,9 @@ const Card = ({ card, onAnswer }) => {
   const handleSubmit = () => {
     if (!answer || status !== 'idle') return;
 
-    const isCorrect = answer.trim().toLowerCase() === card.cloze_part.toLowerCase();
+    const normalizedAnswer = answer.trim().toLowerCase();
+    const normalizedSolution = (card.cloze_part || '').trim().toLowerCase();
+    const isCorrect = normalizedSolution && normalizedAnswer === normalizedSolution;
 
     if (isCorrect) {
       setStatus('correct');
@@ -113,7 +115,7 @@ const Card = ({ card, onAnswer }) => {
             </button>
           </div>
 
-          {status === 'wrong' && (
+          {status === 'wrong' && card.cloze_part && (
             <motion.div
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: 'auto' }}
@@ -224,8 +226,8 @@ const Card = ({ card, onAnswer }) => {
         }
         
         .mcq-option {
-          padding: var(--spacing-md);
-          background: var(--bg-app);
+          padding: var(--spacing-lg);
+          background: var(--bg-surface);
           border: 1px solid var(--border-color);
           border-radius: var(--radius-md);
           color: var(--text-secondary);
@@ -233,20 +235,24 @@ const Card = ({ card, onAnswer }) => {
           text-align: left;
           transition: all var(--transition-fast);
           font-weight: 500;
+          position: relative;
+          overflow: hidden;
         }
         
         .mcq-option:hover:not(:disabled) {
-          border-color: var(--text-primary);
+          border-color: var(--color-primary);
           color: var(--text-primary);
-          transform: translate(-1px, -1px);
-          box-shadow: var(--shadow-sm);
+          background: var(--bg-surface-hover);
+          transform: translateY(-2px);
+          box-shadow: var(--shadow-md);
         }
         
         .mcq-option.selected {
-          background: var(--color-primary);
+          background: rgba(124, 58, 237, 0.1);
           border-color: var(--color-primary);
-          color: white;
-          box-shadow: var(--shadow-sm);
+          color: var(--color-primary);
+          box-shadow: 0 0 0 1px var(--color-primary);
+          font-weight: 600;
         }
         
         .actions {

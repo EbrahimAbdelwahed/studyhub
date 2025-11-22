@@ -1,6 +1,6 @@
 import json
 import os
-from typing import List, Optional
+from typing import List, Optional, Tuple
 
 from fastapi import HTTPException
 from openai import OpenAI
@@ -31,7 +31,17 @@ Formato JSON di uscita:
 }"""
 
 
-def _build_user_prompt(units: List[SyllabusUnit], tags: Optional[List[str]], num_cards: int) -> str:
+def _normalize_question(question: str) -> str:
+    """Lowercase and collapse whitespace to spot near-identical questions."""
+    return " ".join((question or "").lower().split())
+
+
+def _build_user_prompt(
+    units: List[SyllabusUnit],
+    tags: Optional[List[str]],
+    num_cards: int,
+    exclude_questions: Optional[List[str]] = None,
+) -> str:
     lines = []
     lines.append(f"Genera {num_cards} card aderenti al syllabus DM418.")
     if tags:
@@ -40,6 +50,10 @@ def _build_user_prompt(units: List[SyllabusUnit], tags: Optional[List[str]], num
     for u in units:
         topics = "; ".join(u.topics or [])
         lines.append(f"- {u.id} ({u.title}) [{u.primary_competency}] -> Topics: {topics}")
+    if exclude_questions:
+        lines.append("Non ripetere domande identiche o quasi identiche a queste già presenti:")
+        for q in exclude_questions[:20]:  # limita il prompt
+            lines.append(f"- {q}")
     return "\n".join(lines)
 
 
@@ -51,9 +65,15 @@ def _get_client() -> OpenAI:
     return OpenAI(api_key=api_key, base_url=base_url)
 
 
-def generate_cards(units: List[SyllabusUnit], tags: Optional[List[str]], num_cards: int, model: str = "gpt-5.1") -> List[Card]:
+def generate_cards(
+    units: List[SyllabusUnit],
+    tags: Optional[List[str]],
+    num_cards: int,
+    model: str = "gpt-5.1",
+    exclude_questions: Optional[List[str]] = None,
+) -> List[Card]:
     client = _get_client()
-    prompt = _build_user_prompt(units, tags, num_cards)
+    prompt = _build_user_prompt(units, tags, num_cards, exclude_questions)
     try:
         response = client.chat.completions.create(
             model=model,
@@ -76,15 +96,71 @@ def generate_cards(units: List[SyllabusUnit], tags: Optional[List[str]], num_car
 
     cards: List[Card] = []
     for c in payload_cards:
+        cloze_value = c.get("cloze_part")
+        mcq_options = c.get("mcq_options")
+        if c.get("type") == CardType.MCQ and not cloze_value and mcq_options:
+            cloze_value = mcq_options[0]
+
         card = Card(
             syllabus_ref=c["syllabus_ref"],
             dm418_tag=c["dm418_tag"],
             type=c["type"],
             question=c["question"],
-            cloze_part=c.get("cloze_part"),
-            mcq_options=c.get("mcq_options"),
+            cloze_part=cloze_value,
+            mcq_options=mcq_options,
             state=CardState.NEW,
         )
         ensure_next_review(card)
         cards.append(card)
     return cards
+
+
+def generate_unique_cards(
+    *,
+    units: List[SyllabusUnit],
+    tags: Optional[List[str]],
+    num_cards: int,
+    model: str = "gpt-5.1",
+    existing_questions: Optional[List[str]] = None,
+    max_rounds: int = 3,
+) -> Tuple[List[Card], List[str]]:
+    """
+    Generate cards while filtering duplicates against existing questions and within the batch.
+    Returns (new_cards, skipped_questions).
+    """
+    seen_questions = {_normalize_question(q): q for q in (existing_questions or [])}
+    cards: List[Card] = []
+    skipped: List[str] = []
+    recent_for_prompt: List[str] = list(existing_questions or [])[-20:]
+
+    for _ in range(max_rounds):
+        if len(cards) >= num_cards:
+            break
+
+        remaining = num_cards - len(cards)
+        batch = generate_cards(
+            units=units,
+            tags=tags,
+            num_cards=remaining,
+            model=model,
+            exclude_questions=recent_for_prompt,
+        )
+
+        if not batch:
+            break
+
+        for card in batch:
+            key = _normalize_question(card.question)
+            if key in seen_questions:
+                skipped.append(card.question)
+                continue
+
+            seen_questions[key] = card.question
+            recent_for_prompt.append(card.question)
+            if len(recent_for_prompt) > 30:
+                recent_for_prompt = recent_for_prompt[-30:]
+
+            ensure_next_review(card)
+            cards.append(card)
+
+    return cards, skipped

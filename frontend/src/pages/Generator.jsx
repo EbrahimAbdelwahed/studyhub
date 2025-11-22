@@ -126,10 +126,26 @@ const Generator = () => {
                             animate={{ opacity: 1, y: 0 }}
                             className="result-success"
                         >
-                            <Check size={18} />
-                            <div>
-                                <strong>Success!</strong>
-                                <div className="text-sm">Generated {result.created} cards</div>
+                            <div className="success-icon">
+                                <Check size={24} />
+                            </div>
+                            <div className="success-content">
+                                <div className="success-title">Generation Complete!</div>
+                                <div className="success-metrics">
+                                    <div className="metric">
+                                        <span className="value">{result.created}</span>
+                                        <span className="label">Created</span>
+                                    </div>
+                                    {result.skipped_duplicates > 0 && (
+                                        <>
+                                            <div className="divider" />
+                                            <div className="metric text-warning">
+                                                <span className="value">{result.skipped_duplicates}</span>
+                                                <span className="label">Skipped (Dupes)</span>
+                                            </div>
+                                        </>
+                                    )}
+                                </div>
                             </div>
                         </motion.div>
                     )}
@@ -319,13 +335,67 @@ const Generator = () => {
         .text-primary { color: var(--color-primary); }
         
         .result-success {
-          padding: var(--spacing-md);
+          padding: var(--spacing-lg);
           background: rgba(74, 222, 128, 0.1);
-          color: var(--color-success);
+          border: 1px solid rgba(74, 222, 128, 0.2);
           border-radius: var(--radius-md);
           display: flex;
           align-items: center;
-          gap: var(--spacing-md);
+          gap: var(--spacing-lg);
+        }
+
+        .success-icon {
+            width: 40px;
+            height: 40px;
+            background: var(--color-success);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 12px rgba(74, 222, 128, 0.3);
+        }
+
+        .success-content {
+            flex: 1;
+        }
+
+        .success-title {
+            font-weight: 700;
+            color: var(--color-success);
+            margin-bottom: 4px;
+        }
+
+        .success-metrics {
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-lg);
+        }
+
+        .metric {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .metric .value {
+            font-weight: 700;
+            font-size: 1.1rem;
+        }
+
+        .metric .label {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            opacity: 0.8;
+        }
+
+        .metric.text-warning {
+            color: var(--color-warning);
+        }
+
+        .divider {
+            width: 1px;
+            height: 24px;
+            background: rgba(255,255,255,0.1);
         }
         
         .result-error {

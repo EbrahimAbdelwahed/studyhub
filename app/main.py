@@ -1,4 +1,5 @@
 import os
+import json
 from datetime import datetime, timedelta
 from typing import List, Optional
 
@@ -9,7 +10,7 @@ from sqlalchemy import case, select, or_
 
 from . import db
 from .analytics import mastery_by_syllabus, error_taxonomy, velocity_trend
-from .generator import generate_cards
+from .generator import generate_cards, generate_unique_cards
 from .models import Card, CardState, CardType, Attempt, GeneratorJob, SyllabusUnit
 from .scheduler import ensure_next_review, update_card_state, score_delta
 
@@ -61,6 +62,7 @@ class CardOut(BaseModel):
 class GeneratorResponse(BaseModel):
     created: int
     job_id: Optional[int] = None
+    skipped_duplicates: int = 0
 
 
 class SyllabusOut(BaseModel):
@@ -111,6 +113,49 @@ def import_syllabus(payload: ImportSyllabusRequest):
     return {"imported": created, "total_units": len(units)}
 
 
+@app.post("/import/defaults")
+def import_defaults():
+    files = ["chem.json", "fisica.json"]
+    total_imported = 0
+    total_units = 0
+    
+    with db.get_session() as session:
+        for filename in files:
+            if not os.path.exists(filename):
+                continue
+                
+            with open(filename, "r") as f:
+                data = json.load(f)
+                
+            units = data.get("units", [])
+            meta = data.get("meta", {})
+            total_units += len(units)
+            
+            for unit in units:
+                unit_obj = SyllabusUnit(
+                    id=unit["id"],
+                    title=unit["title"],
+                    exam_weight=unit.get("exam_weight"),
+                    primary_competency=unit.get("primary_competency"),
+                    secondary_competency=unit.get("secondary_competency"),
+                    topics=unit.get("topics", []),
+                    subject=unit.get("subject") or meta.get("subject"),
+                    source=meta.get("source"),
+                    total_cfu=meta.get("total_cfu"),
+                    meta_version=meta.get("version"),
+                )
+                existing = session.get(SyllabusUnit, unit_obj.id)
+                if existing:
+                    for attr, value in unit_obj.dict(exclude={"id", "created_at", "updated_at"}).items():
+                        setattr(existing, attr, value)
+                else:
+                    session.add(unit_obj)
+                    total_imported += 1
+        session.commit()
+        
+    return {"imported": total_imported, "total_units": total_units}
+
+
 
 
 
@@ -136,8 +181,18 @@ def run_generator(request: GeneratorRequest):
         session.commit()
         session.refresh(job)
 
+        unit_ids = [u.id for u in units]
+        existing_questions_raw = session.exec(select(Card.question).where(Card.syllabus_ref.in_(unit_ids))).all()
+        existing_questions = [q[0] if isinstance(q, tuple) else q for q in existing_questions_raw]
+
         try:
-            cards = generate_cards(units=units, tags=request.tags, num_cards=request.num_cards, model=request.model)
+            cards, skipped = generate_unique_cards(
+                units=units,
+                tags=request.tags,
+                num_cards=request.num_cards,
+                model=request.model,
+                existing_questions=existing_questions,
+            )
         except HTTPException as exc:
             job.status = "FAILED"
             job.error = str(exc.detail)
@@ -145,15 +200,29 @@ def run_generator(request: GeneratorRequest):
             session.commit()
             raise
 
+        if not cards:
+            job.status = "FAILED"
+            job.error = "Nessuna card unica generata"
+            job.updated_at = datetime.utcnow()
+            session.commit()
+            raise HTTPException(status_code=400, detail=job.error)
+
         for card in cards:
-            ensure_next_review(card)
             session.add(card)
 
         job.status = "COMPLETED"
+        job.payload = {"units": unit_ids, "tags": request.tags, "skipped_duplicates": len(skipped)}
         job.updated_at = datetime.utcnow()
         session.commit()
 
-        return GeneratorResponse(created=len(cards), job_id=job.id)
+        return GeneratorResponse(created=len(cards), job_id=job.id, skipped_duplicates=len(skipped))
+
+
+@app.get("/generator/jobs", response_model=List[GeneratorJob])
+def list_generator_jobs(limit: int = 20):
+    with db.get_session() as session:
+        jobs = session.exec(select(GeneratorJob).order_by(GeneratorJob.created_at.desc()).limit(limit)).all()
+        return jobs
 
 
 @app.get("/syllabus", response_model=List[SyllabusOut])
@@ -164,7 +233,7 @@ def list_syllabus():
 
 
 @app.get("/cards/next", response_model=List[CardOut])
-def fetch_next_cards(limit: int = 10, include_new: bool = True):
+def fetch_next_cards(limit: int = 10, include_new: bool = True, card_type: Optional[str] = None):
     now = datetime.utcnow()
     with db.get_session() as session:
         priority = case(
@@ -178,7 +247,11 @@ def fetch_next_cards(limit: int = 10, include_new: bool = True):
         if include_new:
             conditions.append(Card.state == CardState.NEW)
 
-        stmt = select(Card).where(or_(*conditions)).order_by(priority, Card.next_review).limit(limit)
+        stmt = select(Card).where(or_(*conditions))
+        if card_type:
+            stmt = stmt.where(Card.type == card_type)
+
+        stmt = stmt.order_by(priority, Card.next_review).limit(limit)
         cards = session.exec(stmt).scalars().all()
         return [CardOut(**card.dict()) for card in cards]
 

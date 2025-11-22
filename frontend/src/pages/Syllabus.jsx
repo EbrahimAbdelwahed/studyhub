@@ -52,7 +52,22 @@ const Syllabus = () => {
 
       <div className="syllabus-tree card-panel">
         {groupedSyllabus.length === 0 ? (
-          <div className="text-center p-4 text-muted">No syllabus data found. Import a syllabus to get started.</div>
+          <div className="text-center p-8 text-muted flex flex-col items-center gap-4">
+            <p>No syllabus data found. Import a syllabus to get started.</p>
+            <button
+              onClick={() => {
+                if (confirm('Import default syllabus (Chemistry & Physics)?')) {
+                  setLoadingStats(true);
+                  client.post('/import/defaults')
+                    .then(() => window.location.reload())
+                    .catch(err => alert('Failed to import: ' + err));
+                }
+              }}
+              className="px-4 py-2 bg-primary text-white rounded-lg hover:opacity-90 transition-opacity"
+            >
+              Import Default Syllabus
+            </button>
+          </div>
         ) : (
           groupedSyllabus.map(subject => (
             <details key={subject.id} open className="subject-details">

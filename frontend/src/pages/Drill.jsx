@@ -8,16 +8,21 @@ const Drill = () => {
     const [queue, setQueue] = useState([]);
     const [currentCardIndex, setCurrentCardIndex] = useState(0);
     const [loading, setLoading] = useState(true);
+    const [limit, setLimit] = useState(10);
+    const [cardType, setCardType] = useState('ALL');
+    const [includeNew, setIncludeNew] = useState(true);
 
     const fetchCards = useCallback(async () => {
         setLoading(true);
         try {
-            const res = await client.get('/cards/next?limit=10');
-            // Filter out duplicates if appending, but for now let's just replace if empty
-            // or append if we want continuous flow.
-            // The spec says "buffer continuo".
-            // Let's just replace the queue if it's empty, otherwise append?
-            // Simpler: If queue is empty, set it.
+            const params = new URLSearchParams();
+            params.set('limit', limit);
+            params.set('include_new', includeNew);
+            if (cardType !== 'ALL') {
+                params.set('card_type', cardType);
+            }
+
+            const res = await client.get(`/cards/next?${params.toString()}`);
             setQueue(res.data);
             setCurrentCardIndex(0);
         } catch (err) {
@@ -25,7 +30,7 @@ const Drill = () => {
         } finally {
             setLoading(false);
         }
-    }, []);
+    }, [limit, cardType, includeNew]);
 
     useEffect(() => {
         fetchCards();
@@ -81,6 +86,54 @@ const Drill = () => {
 
     return (
         <div className="drill-page">
+            <div className="drill-controls card-panel">
+                <div className="control-group">
+                    <div className="control">
+                        <label>Cards</label>
+                        <input
+                            type="number"
+                            min="1"
+                            max="50"
+                            value={limit}
+                            onChange={(e) => {
+                                const next = Math.min(Math.max(parseInt(e.target.value || '1', 10), 1), 50);
+                                setLimit(next);
+                            }}
+                            className="input-premium"
+                        />
+                    </div>
+                    <div className="control">
+                        <label>Type</label>
+                        <select
+                            value={cardType}
+                            onChange={(e) => setCardType(e.target.value)}
+                            className="select-premium"
+                        >
+                            <option value="ALL">All Types</option>
+                            <option value="CLOZE">Cloze</option>
+                            <option value="MCQ">Multiple Choice</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div className="control-group">
+                    <div className="control toggle-control">
+                        <label>Include New</label>
+                        <button
+                            className={`toggle-switch ${includeNew ? 'active' : ''}`}
+                            onClick={() => setIncludeNew((v) => !v)}
+                            type="button"
+                        >
+                            <div className="toggle-handle" />
+                        </button>
+                    </div>
+
+                    <button onClick={fetchCards} className="btn-icon-primary" disabled={loading} title="Refresh Queue">
+                        <RefreshCw size={20} className={loading ? 'animate-spin' : ''} />
+                    </button>
+                </div>
+            </div>
+
             {currentCard && (
                 <Card
                     card={currentCard}
@@ -96,18 +149,138 @@ const Drill = () => {
         .drill-page {
           display: flex;
           flex-direction: column;
-          align-items: center;
-          justify-content: center;
-          height: 100%;
+          gap: var(--spacing-lg);
+          min-height: 100%;
           position: relative;
+          max-width: 800px;
+          margin: 0 auto;
+          width: 100%;
         }
         
+        .drill-controls {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          padding: var(--spacing-md) var(--spacing-lg);
+          background: rgba(30, 41, 59, 0.7);
+          backdrop-filter: blur(10px);
+          border: 1px solid var(--border-color);
+          border-radius: var(--radius-lg);
+          flex-wrap: wrap;
+          gap: var(--spacing-md);
+        }
+
+        .control-group {
+            display: flex;
+            gap: var(--spacing-lg);
+            align-items: center;
+        }
+
+        .control {
+          display: flex;
+          flex-direction: column;
+          gap: 4px;
+        }
+
+        .control label {
+          font-size: 0.75rem;
+          color: var(--text-muted);
+          font-weight: 600;
+          text-transform: uppercase;
+          letter-spacing: 0.05em;
+        }
+
+        .input-premium,
+        .select-premium {
+          padding: 8px 12px;
+          background: rgba(0, 0, 0, 0.2);
+          border: 1px solid var(--border-color);
+          border-radius: var(--radius-md);
+          color: var(--text-primary);
+          font-size: 0.9rem;
+          outline: none;
+          transition: all var(--transition-fast);
+          min-width: 80px;
+        }
+
+        .select-premium {
+            min-width: 140px;
+            cursor: pointer;
+        }
+
+        .input-premium:focus,
+        .select-premium:focus {
+          border-color: var(--color-primary);
+          background: rgba(0, 0, 0, 0.4);
+        }
+
+        .toggle-control {
+            align-items: center;
+        }
+
+        .toggle-switch {
+            width: 48px;
+            height: 26px;
+            background: var(--bg-app);
+            border: 1px solid var(--border-color);
+            border-radius: 13px;
+            position: relative;
+            cursor: pointer;
+            transition: all var(--transition-fast);
+        }
+
+        .toggle-switch.active {
+            background: var(--color-primary);
+            border-color: var(--color-primary);
+        }
+
+        .toggle-handle {
+            width: 20px;
+            height: 20px;
+            background: white;
+            border-radius: 50%;
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            transition: transform var(--transition-fast);
+            box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+        }
+
+        .toggle-switch.active .toggle-handle {
+            transform: translateX(22px);
+        }
+
+        .btn-icon-primary {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--color-primary);
+            color: white;
+            border-radius: var(--radius-md);
+            transition: all var(--transition-fast);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .btn-icon-primary:hover:not(:disabled) {
+            background: var(--color-primary-hover);
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .btn-icon-primary:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+        }
+
         .queue-status {
           position: absolute;
-          bottom: 0;
+          bottom: -30px;
           right: 0;
           color: var(--text-muted);
           font-size: 0.875rem;
+          font-family: monospace;
         }
         
         .btn-primary {
