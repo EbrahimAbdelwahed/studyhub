@@ -10,7 +10,7 @@ from sqlalchemy import case, select, or_
 
 from . import db
 from .analytics import mastery_by_syllabus, error_taxonomy, velocity_trend
-from .generator import generate_cards, generate_unique_cards
+from .generator import generate_cards, generate_unique_cards, _get_client, _infer_mcq_answer
 from .models import Card, CardState, CardType, Attempt, GeneratorJob, SyllabusUnit
 from .scheduler import ensure_next_review, update_card_state, score_delta
 
@@ -347,3 +347,53 @@ def delete_card(card_id: str):
         session.delete(card)
         session.commit()
         return {"ok": True}
+
+
+@app.post("/maintenance/heal-mcq-cloze")
+def heal_mcq_cloze(try_infer: bool = True, model: str = "gpt-5.1", limit: int = 200):
+    """
+    Sanitize existing MCQ cards missing cloze_part by inferring the correct option
+    (when possible) or defaulting to the first option to avoid UI breakage.
+    """
+    with db.get_session() as session:
+        missing_cards = session.exec(
+            select(Card).where(
+                Card.type == CardType.MCQ,
+                or_(Card.cloze_part.is_(None), Card.cloze_part == "")
+            ).limit(limit)
+        ).scalars().all()
+
+        if not missing_cards:
+            return {"scanned": 0, "updated": 0, "inferred": 0, "defaulted": 0}
+
+        client = _get_client() if try_infer else None
+        updated = inferred = defaulted = 0
+
+        for card in missing_cards:
+            answer = None
+            options = card.mcq_options or []
+
+            if try_infer and client and options:
+                answer = _infer_mcq_answer(client, question=card.question, options=options, model=model)
+                if answer:
+                    inferred += 1
+
+            if not answer and options:
+                answer = options[0]
+                defaulted += 1
+
+            if not answer:
+                continue
+
+            card.cloze_part = answer
+            card.updated_at = datetime.utcnow()
+            session.add(card)
+            updated += 1
+
+        session.commit()
+        return {
+            "scanned": len(missing_cards),
+            "updated": updated,
+            "inferred": inferred,
+            "defaulted": defaulted,
+        }

@@ -102,6 +102,12 @@ def _infer_mcq_answer(client: OpenAI, *, question: str, options: List[str], mode
     return None
 
 
+def infer_mcq_answer(question: str, options: List[str], model: str = "gpt-5.1") -> Optional[str]:
+    """Public helper to infer the correct MCQ option using the LLM."""
+    client = _get_client()
+    return _infer_mcq_answer(client, question=question, options=options, model=model)
+
+
 def generate_cards(
     units: List[SyllabusUnit],
     tags: Optional[List[str]],
