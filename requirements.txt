@@ -5,3 +5,7 @@ sqlmodel==0.0.16
 pydantic==2.7.1
 python-dotenv==1.0.1
 openai==1.30.0
+# httpx 0.28 rimuove `proxies`; OpenAI client usa `proxies` → pin 0.27.x
+httpx==0.27.2
+mangum==0.17.0
+psycopg2-binary==2.9.9

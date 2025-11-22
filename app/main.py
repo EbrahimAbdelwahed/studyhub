@@ -4,7 +4,7 @@ from typing import List, Optional
 
 from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
 from sqlalchemy import case, select, or_
 
 from . import db
@@ -19,11 +19,11 @@ from fastapi.middleware.cors import CORSMiddleware
 load_dotenv()
 db.init_db()
 
-app = FastAPI(title="MedSprint Backend", version="0.1.0")
+app = FastAPI(title="MedSprint Backend", version="0.1.0", root_path="/api")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173"],
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -64,12 +64,13 @@ class GeneratorResponse(BaseModel):
 
 
 class SyllabusOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True, extra="ignore")
     id: str
     title: str
     exam_weight: Optional[int] = None
     primary_competency: Optional[str] = None
     secondary_competency: Optional[str] = None
-    topics: List[str] = []
+    topics: List[str] = Field(default_factory=list)
     subject: Optional[str] = None
     source: Optional[str] = None
     total_cfu: Optional[int] = None
@@ -94,7 +95,7 @@ def import_syllabus(payload: ImportSyllabusRequest):
                 primary_competency=unit.get("primary_competency"),
                 secondary_competency=unit.get("secondary_competency"),
                 topics=unit.get("topics", []),
-                subject=meta.get("subject"),
+                subject=unit.get("subject") or meta.get("subject"),
                 source=meta.get("source"),
                 total_cfu=meta.get("total_cfu"),
                 meta_version=meta.get("version"),
@@ -110,10 +111,7 @@ def import_syllabus(payload: ImportSyllabusRequest):
     return {"imported": created, "total_units": len(units)}
 
 
-@app.get("/syllabus", response_model=List[SyllabusUnit])
-def get_syllabus():
-    with db.get_session() as session:
-        return session.exec(select(SyllabusUnit)).all()
+
 
 
 @app.post("/generator/run", response_model=GeneratorResponse)
@@ -122,7 +120,7 @@ def run_generator(request: GeneratorRequest):
         stmt = select(SyllabusUnit)
         if request.units:
             stmt = stmt.where(SyllabusUnit.id.in_(request.units))
-        units = session.exec(stmt).all()
+        units = session.exec(stmt).scalars().all()
         if not units:
             raise HTTPException(status_code=400, detail="Nessuna unit trovata per i parametri richiesti")
 
@@ -161,8 +159,8 @@ def run_generator(request: GeneratorRequest):
 @app.get("/syllabus", response_model=List[SyllabusOut])
 def list_syllabus():
     with db.get_session() as session:
-        units = session.exec(select(SyllabusUnit)).all()
-        return [SyllabusOut(**u.dict()) for u in units]
+        units = session.exec(select(SyllabusUnit)).scalars().all()
+        return [SyllabusOut.model_validate(u) for u in units]
 
 
 @app.get("/cards/next", response_model=List[CardOut])
@@ -181,7 +179,7 @@ def fetch_next_cards(limit: int = 10, include_new: bool = True):
             conditions.append(Card.state == CardState.NEW)
 
         stmt = select(Card).where(or_(*conditions)).order_by(priority, Card.next_review).limit(limit)
-        cards = session.exec(stmt).all()
+        cards = session.exec(stmt).scalars().all()
         return [CardOut(**card.dict()) for card in cards]
 
 
@@ -229,3 +227,50 @@ def error_taxonomy_endpoint():
 def velocity():
     with db.get_session() as session:
         return velocity_trend(session)
+
+
+@app.get("/cards", response_model=List[CardOut])
+def list_cards(
+    offset: int = 0, limit: int = 50, syllabus_ref: Optional[str] = None
+):
+    with db.get_session() as session:
+        query = select(Card)
+        if syllabus_ref:
+            query = query.where(Card.syllabus_ref == syllabus_ref)
+        query = query.offset(offset).limit(limit)
+        cards = session.exec(query).scalars().all()
+        return [CardOut(**c.dict()) for c in cards]
+
+
+class CardUpdate(BaseModel):
+    question: Optional[str] = None
+    cloze_part: Optional[str] = None
+    mcq_options: Optional[List[str]] = None
+
+
+@app.put("/cards/{card_id}", response_model=CardOut)
+def update_card(card_id: str, card_update: CardUpdate):
+    with db.get_session() as session:
+        card = session.get(Card, card_id)
+        if not card:
+            raise HTTPException(status_code=404, detail="Card not found")
+        
+        card_data = card_update.dict(exclude_unset=True)
+        for key, value in card_data.items():
+            setattr(card, key, value)
+            
+        session.add(card)
+        session.commit()
+        session.refresh(card)
+        return CardOut(**card.dict())
+
+
+@app.delete("/cards/{card_id}")
+def delete_card(card_id: str):
+    with db.get_session() as session:
+        card = session.get(Card, card_id)
+        if not card:
+            raise HTTPException(status_code=404, detail="Card not found")
+        session.delete(card)
+        session.commit()
+        return {"ok": True}
