@@ -4,11 +4,6 @@
       "runtime": "python3.11"
     }
   },
-  "env": {
-    "DATABASE_URL": "@DATABASE_URL",
-    "OPENAI_API_KEY": "@OPENAI_API_KEY",
-    "OPENAI_BASE_URL": "@OPENAI_BASE_URL"
-  },
   "rewrites": [
     {
       "source": "/api/(.*)",
