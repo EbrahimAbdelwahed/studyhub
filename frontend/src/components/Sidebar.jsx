@@ -1,6 +1,6 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
-import { LayoutDashboard, Play, Activity, ListTree, Cpu } from 'lucide-react';
+import { LayoutDashboard, Play, Activity, ListTree, Cpu, BookOpen } from 'lucide-react';
 import '../styles/global.css';
 
 const Sidebar = () => {
@@ -10,6 +10,7 @@ const Sidebar = () => {
     { path: '/forensics', icon: Activity, label: 'Forensics' },
     { path: '/syllabus', icon: ListTree, label: 'Syllabus' },
     { path: '/generator', icon: Cpu, label: 'Generator' },
+    { path: '/library', icon: BookOpen, label: 'Library' },
   ];
 
   return (
