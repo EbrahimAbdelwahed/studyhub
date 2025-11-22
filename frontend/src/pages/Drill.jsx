@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import client from '../api/client';
 import Card from '../components/Card';
+import Select from '../components/Select';
 import { Loader2, RefreshCw } from 'lucide-react';
 import '../styles/global.css';
 
@@ -103,16 +104,16 @@ const Drill = () => {
                         />
                     </div>
                     <div className="control">
-                        <label>Type</label>
-                        <select
+                        <Select
+                            label="Type"
                             value={cardType}
-                            onChange={(e) => setCardType(e.target.value)}
-                            className="select-premium"
-                        >
-                            <option value="ALL">All Types</option>
-                            <option value="CLOZE">Cloze</option>
-                            <option value="MCQ">Multiple Choice</option>
-                        </select>
+                            onChange={(val) => setCardType(val)}
+                            options={[
+                                { value: 'ALL', label: 'All Types' },
+                                { value: 'CLOZE', label: 'Cloze' },
+                                { value: 'MCQ', label: 'Multiple Choice' }
+                            ]}
+                        />
                     </div>
                 </div>
 

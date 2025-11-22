@@ -58,20 +58,21 @@ const Sidebar = () => {
         .logo {
           width: 48px;
           height: 48px;
-          background: linear-gradient(135deg, var(--color-primary), #7C3AED);
+          background: rgba(255, 255, 255, 0.03);
+          border: 1px solid rgba(255, 255, 255, 0.1);
           border-radius: var(--radius-lg);
           display: flex;
           align-items: center;
           justify-content: center;
-          font-weight: 700;
-          color: white;
-          font-size: 0.875rem;
-          box-shadow: 0 4px 12px rgba(124, 58, 237, 0.3);
-          transition: transform var(--transition-fast);
+          color: var(--text-primary);
+          transition: all var(--transition-fast);
         }
 
         .logo:hover {
-          transform: scale(1.05);
+          border-color: var(--color-primary);
+          background: rgba(124, 58, 237, 0.1);
+          color: var(--color-primary);
+          box-shadow: 0 0 15px rgba(124, 58, 237, 0.2);
         }
         
         .nav-links {

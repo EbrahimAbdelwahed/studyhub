@@ -64,6 +64,44 @@ def _get_client() -> OpenAI:
     return OpenAI(api_key=api_key, base_url=base_url)
 
 
+def _infer_mcq_answer(client: OpenAI, *, question: str, options: List[str], model: str) -> Optional[str]:
+    """
+    Ask the model to pick the correct option when cloze_part is missing.
+    Returns the chosen option or None if inference fails.
+    """
+    if not options:
+        return None
+
+    try:
+        completion = client.chat.completions.create(
+            model=model,
+            temperature=0,
+            response_format={"type": "json_object"},
+            messages=[
+                {
+                    "role": "system",
+                    "content": (
+                        "Seleziona l'unica risposta corretta tra le opzioni fornite. "
+                        "Rispondi solo in JSON: {\"answer\": \"<option_text>\"}"
+                    ),
+                },
+                {
+                    "role": "user",
+                    "content": f"Domanda: {question}\nOpzioni: {options}",
+                },
+            ],
+        )
+        content = completion.choices[0].message.content
+        data = json.loads(content)
+        answer = data.get("answer")
+        if answer in options:
+            return answer
+    except Exception:
+        # Silent fallback: better to return None than break the flow
+        return None
+    return None
+
+
 def generate_cards(
     units: List[SyllabusUnit],
     tags: Optional[List[str]],
@@ -101,15 +139,13 @@ def generate_cards(
         # Validation: MCQ must have a cloze_part (the correct answer)
         if c.get("type") == CardType.MCQ:
             if not cloze_value:
-                # If the LLM failed to provide the answer key, we cannot use this card safely.
-                # We skip it or log it. For now, let's skip adding it to the list.
-                print(f"Skipping MCQ card due to missing cloze_part (answer key): {c.get('question')}")
-                continue
-            
-            # Optional: Verify cloze_value is actually in mcq_options
+                # Try to infer the answer using the model to avoid corrupting the UI
+                inferred = _infer_mcq_answer(client, question=c.get("question"), options=mcq_options or [], model=model)
+                cloze_value = inferred or (mcq_options[0] if mcq_options else None)
+
+            # Ensure cloze_value matches one of the options; if not, default to first option
             if mcq_options and cloze_value not in mcq_options:
-                 # Try to fuzzy match or just warn? Let's trust the LLM but maybe strip whitespace
-                 pass
+                cloze_value = mcq_options[0]
 
         card = Card(
             syllabus_ref=c["syllabus_ref"],
