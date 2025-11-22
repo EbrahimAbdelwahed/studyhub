@@ -19,7 +19,7 @@ from fastapi.middleware.cors import CORSMiddleware
 load_dotenv()
 db.init_db()
 
-app = FastAPI(title="MedSprint Backend", version="0.1.0")
+app = FastAPI(title="MedSprint Backend", version="0.1.0", root_path="/api")
 
 app.add_middleware(
     CORSMiddleware,
