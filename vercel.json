@@ -19,12 +19,11 @@
       "dest": "/api/index.py"
     },
     {
-      "src": "/(.*\\.(?:js|css|png|jpg|jpeg|gif|svg|ico|txt|json|webp|woff|woff2|ttf|map))",
-      "dest": "/frontend/dist/$1"
+      "handle": "filesystem"
     },
     {
       "src": "/(.*)",
-      "dest": "/frontend/dist/index.html"
+      "dest": "/index.html"
     }
   ]
 }
