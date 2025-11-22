@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import client from '../api/client';
 import ErrorTaxonomyChart from '../components/ErrorTaxonomyChart';
+import HealerPanel from '../components/HealerPanel';
 import { Loader2 } from 'lucide-react';
 import '../styles/global.css';
 
@@ -37,6 +38,8 @@ const Forensics = () => {
                     <ErrorTaxonomyChart data={errorData} />
                 </div>
             </div>
+
+            <HealerPanel />
 
             <style>{`
         .forensics-page {
