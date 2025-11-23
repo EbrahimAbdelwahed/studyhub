@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import client from '../api/client';
-import { Cpu, Check, AlertTriangle, BookOpen, CheckSquare, Square } from 'lucide-react';
+import { Cpu, Check, AlertTriangle, BookOpen, CheckSquare, Square, Zap, BrainCircuit } from 'lucide-react';
 import { motion } from 'framer-motion';
 import '../styles/global.css';
 
 const Generator = () => {
     const [numCards, setNumCards] = useState(10);
+    const [twoStage, setTwoStage] = useState(false);
     const [syllabus, setSyllabus] = useState({}); // Grouped by subject
     const [selectedUnits, setSelectedUnits] = useState(new Set());
     const [loadingSyllabus, setLoadingSyllabus] = useState(true);
@@ -72,7 +73,8 @@ const Generator = () => {
             const res = await client.post('/generator/run', {
                 num_cards: parseInt(numCards),
                 units: Array.from(selectedUnits),
-                model: 'gpt-5.1'
+                model: 'gpt-5.1',
+                two_stage: twoStage
             });
             setResult(res.data);
         } catch (err) {
@@ -101,6 +103,26 @@ const Generator = () => {
                             max="50"
                             className="input-number"
                         />
+                    </div>
+
+                    <div className="form-group">
+                        <div className="flex justify-between items-center mb-2">
+                            <label className="flex items-center gap-2 cursor-pointer select-none">
+                                <BrainCircuit size={16} className={twoStage ? "text-primary" : "text-muted"} />
+                                Two-Stage Generation
+                            </label>
+                            <div
+                                className={`toggle-switch ${twoStage ? 'active' : ''}`}
+                                onClick={() => setTwoStage(!twoStage)}
+                            >
+                                <div className="toggle-thumb" />
+                            </div>
+                        </div>
+                        <p className="text-xs text-muted leading-relaxed">
+                            {twoStage
+                                ? "Generates briefs first, then cards. Higher quality, slower."
+                                : "Direct generation. Faster, standard quality."}
+                        </p>
                     </div>
 
                     <div className="selection-info">
@@ -224,6 +246,35 @@ const Generator = () => {
           display: flex;
           flex-direction: column;
           gap: var(--spacing-lg);
+        }
+
+        .toggle-switch {
+            width: 44px;
+            height: 24px;
+            background: var(--bg-surface-hover);
+            border-radius: 12px;
+            padding: 2px;
+            cursor: pointer;
+            transition: background var(--transition-fast);
+            position: relative;
+            border: 1px solid var(--border-color);
+        }
+
+        .toggle-switch.active {
+            background: var(--color-primary);
+            border-color: var(--color-primary);
+        }
+
+        .toggle-thumb {
+            width: 18px;
+            height: 18px;
+            background: white;
+            border-radius: 50%;
+            transition: transform var(--transition-fast);
+        }
+
+        .toggle-switch.active .toggle-thumb {
+            transform: translateX(20px);
         }
         
         .syllabus-selection {
