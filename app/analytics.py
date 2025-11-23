@@ -31,7 +31,9 @@ def mastery_by_syllabus(session: Session) -> List[Dict[str, Any]]:
         grouped.setdefault(subj_key, {"id": subj_key, "children": []})
         grouped[subj_key]["children"].append(
             {
-                "id": title or syllabus_ref,
+                # Use syllabus_ref as stable key so frontend can match units by id
+                "id": syllabus_ref,
+                "title": title or syllabus_ref,
                 "value": total,
                 "score": round(mastery, 1),
                 "status": status,
