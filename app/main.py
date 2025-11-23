@@ -269,6 +269,7 @@ def run_generator(request: GeneratorRequest):
 
 
 @app.get("/generator/jobs", response_model=List[GeneratorJob])
+@app.get("/api/generator/jobs", response_model=List[GeneratorJob])  # alias for double-prefix setups
 def list_generator_jobs(limit: int = 20):
     with db.get_session() as session:
         jobs = session.exec(select(GeneratorJob).order_by(GeneratorJob.created_at.desc()).limit(limit)).all()
