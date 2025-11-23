@@ -1,17 +1,41 @@
 import React, { useState, useEffect } from 'react';
 import client from '../api/client';
-import { Clock, CheckCircle, XCircle, Loader2 } from 'lucide-react';
+import { Clock, CheckCircle, XCircle, Loader2, Trash2 } from 'lucide-react';
 import '../styles/global.css';
 
 const GeneratorHistory = () => {
     const [jobs, setJobs] = useState([]);
     const [loading, setLoading] = useState(true);
 
+    const [deletingJobId, setDeletingJobId] = useState(null);
+
     const fetchJobs = () => {
         client.get('/generator/jobs')
             .then(res => setJobs(res.data))
             .catch(err => console.error("Failed to fetch jobs", err))
             .finally(() => setLoading(false));
+    };
+
+    const handleRollback = async (jobId) => {
+        if (!window.confirm('Are you sure you want to rollback this generation? All cards created by this job will be permanently deleted.')) {
+            return;
+        }
+
+        setDeletingJobId(jobId);
+        try {
+            await client.delete(`/generator/jobs/${jobId}/cards`);
+            // Refresh jobs to reflect changes (though job itself might stay, cards are gone)
+            // Or maybe we want to remove the job from the list? 
+            // The requirement says "remove all cards", usually the job record stays as history but maybe marked as rolled back?
+            // For now, let's just refresh the list.
+            fetchJobs();
+            alert('Rollback successful. Cards deleted.');
+        } catch (err) {
+            console.error("Failed to rollback job", err);
+            alert('Failed to rollback job. Please try again.');
+        } finally {
+            setDeletingJobId(null);
+        }
     };
 
     useEffect(() => {
@@ -67,6 +91,7 @@ const GeneratorHistory = () => {
                                 <th className="p-4">Duplicates</th>
                                 <th className="p-4">Date</th>
                                 <th className="p-4">Tags</th>
+                                <th className="p-4 text-right">Actions</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -101,6 +126,20 @@ const GeneratorHistory = () => {
                                                 </span>
                                             )) || <span className="text-muted text-sm">-</span>}
                                         </div>
+                                    </td>
+                                    <td className="p-4 text-right">
+                                        <button
+                                            onClick={() => handleRollback(job.id)}
+                                            disabled={deletingJobId === job.id || job.status === 'RUNNING'}
+                                            className="p-2 text-red-400 hover:bg-red-500/10 rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                            title="Rollback Generation (Delete Cards)"
+                                        >
+                                            {deletingJobId === job.id ? (
+                                                <Loader2 size={18} className="animate-spin" />
+                                            ) : (
+                                                <Trash2 size={18} />
+                                            )}
+                                        </button>
                                     </td>
                                 </tr>
                             ))}

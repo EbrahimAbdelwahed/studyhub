@@ -1,27 +1,79 @@
-import React, { useRef, useState, useEffect } from 'react';
-import { ReactSketchCanvas } from 'react-sketch-canvas';
-import { Eraser, Pen, Trash2, Save, Loader2, Undo, Redo } from 'lucide-react';
+import React, { useRef, useState, useEffect, useCallback } from 'react';
+import { Eraser, Pen, Trash2, Save, Loader2, Hand, MousePointer2 } from 'lucide-react';
 import client from '../api/client';
 import '../styles/global.css';
 
 const SketchBox = ({ cardId }) => {
     const canvasRef = useRef(null);
-    const [eraseMode, setEraseMode] = useState(false);
+    const containerRef = useRef(null);
+    const [isDrawing, setIsDrawing] = useState(false);
+    const [tool, setTool] = useState('pen'); // 'pen' or 'eraser'
+    const [penOnly, setPenOnly] = useState(true);
     const [loading, setLoading] = useState(false);
     const [saving, setSaving] = useState(false);
-    const [hasChanges, setHasChanges] = useState(false);
 
+    // Drawing state
+    const ctxRef = useRef(null);
+    const lastPos = useRef({ x: 0, y: 0 });
+
+    // Initialize canvas
     useEffect(() => {
-        if (!cardId) return;
+        const canvas = canvasRef.current;
+        const container = containerRef.current;
+        if (!canvas || !container) return;
+
+        const ctx = canvas.getContext('2d', { desynchronized: true }); // optimize for low latency
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+        ctxRef.current = ctx;
+
+        const resizeCanvas = () => {
+            const { width, height } = container.getBoundingClientRect();
+            // Save current content
+            const tempCanvas = document.createElement('canvas');
+            tempCanvas.width = canvas.width;
+            tempCanvas.height = canvas.height;
+            tempCanvas.getContext('2d').drawImage(canvas, 0, 0);
+
+            // Resize
+            canvas.width = width;
+            canvas.height = height;
+
+            // Restore content
+            ctx.drawImage(tempCanvas, 0, 0, width, height); // Scale or just draw? Just draw for now.
+
+            // Restore context properties
+            ctx.lineCap = 'round';
+            ctx.lineJoin = 'round';
+        };
+
+        resizeCanvas();
+        window.addEventListener('resize', resizeCanvas);
+
+        return () => window.removeEventListener('resize', resizeCanvas);
+    }, []);
+
+    // Load sketch
+    useEffect(() => {
+        if (!cardId || !ctxRef.current) return;
 
         const loadSketch = async () => {
             setLoading(true);
             try {
                 const res = await client.get(`/cards/${cardId}/sketch`);
-                if (res.data && res.data.data_url && canvasRef.current) {
-                    canvasRef.current.loadPaths(JSON.parse(res.data.data_url));
-                } else if (canvasRef.current) {
-                    canvasRef.current.clearCanvas();
+                const ctx = ctxRef.current;
+                const canvas = canvasRef.current;
+
+                // Clear first
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+                if (res.data && res.data.data_url) {
+                    const img = new Image();
+                    img.onload = () => {
+                        ctx.globalCompositeOperation = 'source-over';
+                        ctx.drawImage(img, 0, 0);
+                    };
+                    img.src = res.data.data_url;
                 }
             } catch (err) {
                 console.error('Failed to load sketch', err);
@@ -33,26 +85,71 @@ const SketchBox = ({ cardId }) => {
         loadSketch();
     }, [cardId]);
 
+    const getPos = (e) => {
+        const rect = canvasRef.current.getBoundingClientRect();
+        return {
+            x: e.clientX - rect.left,
+            y: e.clientY - rect.top
+        };
+    };
+
+    const startDrawing = (e) => {
+        if (penOnly && e.pointerType !== 'pen') return;
+
+        e.preventDefault(); // Prevent scrolling/touch actions
+        setIsDrawing(true);
+        const { x, y } = getPos(e);
+        lastPos.current = { x, y };
+
+        // Dot for single click
+        draw(e);
+    };
+
+    const draw = (e) => {
+        if (!isDrawing) return;
+        if (penOnly && e.pointerType !== 'pen') return;
+        e.preventDefault();
+
+        const ctx = ctxRef.current;
+        const { x, y } = getPos(e);
+
+        // Coalesced events for smoother curves
+        const events = e.getCoalescedEvents ? e.getCoalescedEvents() : [e];
+
+        events.forEach(event => {
+            const pos = getPos(event);
+
+            ctx.beginPath();
+            ctx.moveTo(lastPos.current.x, lastPos.current.y);
+            ctx.lineTo(pos.x, pos.y);
+
+            if (tool === 'eraser') {
+                ctx.globalCompositeOperation = 'destination-out';
+                ctx.lineWidth = 20;
+            } else {
+                ctx.globalCompositeOperation = 'source-over';
+                ctx.lineWidth = 2;
+                ctx.strokeStyle = '#e2e8f0'; // var(--text-primary) roughly
+            }
+
+            ctx.stroke();
+            lastPos.current = pos;
+        });
+    };
+
+    const stopDrawing = () => {
+        setIsDrawing(false);
+    };
+
     const handleSave = async () => {
         if (!cardId || !canvasRef.current) return;
 
         setSaving(true);
         try {
-            const paths = await canvasRef.current.exportPaths();
-            // We save the paths JSON string to allow editable reloading
-            // The backend expects a "data_url" field, but we can store the JSON string there if it's just a text field,
-            // or we might need to check if it expects an actual image Data URL.
-            // Re-reading API docs: "data_url" usually implies an image, but let's see if we can store paths.
-            // If the backend just stores a string, JSON is better for re-editing.
-            // If it needs an image for display elsewhere, we might need exportImage.
-            // Let's assume for now we want to be able to continue editing, so we save paths.
-            // If the backend validates it as an image, this might fail.
-            // Let's try to save paths as a string.
-
+            const dataUrl = canvasRef.current.toDataURL('image/png');
             await client.put(`/cards/${cardId}/sketch`, {
-                data_url: JSON.stringify(paths)
+                data_url: dataUrl
             });
-            setHasChanges(false);
         } catch (err) {
             console.error('Failed to save sketch', err);
         } finally {
@@ -61,8 +158,11 @@ const SketchBox = ({ cardId }) => {
     };
 
     const handleClear = async () => {
-        if (window.confirm('Are you sure you want to clear your notes?')) {
-            canvasRef.current.clearCanvas();
+        if (window.confirm('Clear sketch?')) {
+            const ctx = ctxRef.current;
+            const canvas = canvasRef.current;
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
             if (cardId) {
                 try {
                     await client.delete(`/cards/${cardId}/sketch`);
@@ -74,25 +174,19 @@ const SketchBox = ({ cardId }) => {
     };
 
     return (
-        <div className="sketch-box-container">
+        <div className="sketch-box-container" ref={containerRef}>
             <div className="sketch-toolbar">
                 <div className="tools-group">
                     <button
-                        className={`tool-btn ${!eraseMode ? 'active' : ''}`}
-                        onClick={() => {
-                            setEraseMode(false);
-                            canvasRef.current?.eraseMode(false);
-                        }}
+                        className={`tool-btn ${tool === 'pen' ? 'active' : ''}`}
+                        onClick={() => setTool('pen')}
                         title="Pen"
                     >
                         <Pen size={18} />
                     </button>
                     <button
-                        className={`tool-btn ${eraseMode ? 'active' : ''}`}
-                        onClick={() => {
-                            setEraseMode(true);
-                            canvasRef.current?.eraseMode(true);
-                        }}
+                        className={`tool-btn ${tool === 'eraser' ? 'active' : ''}`}
+                        onClick={() => setTool('eraser')}
                         title="Eraser"
                     >
                         <Eraser size={18} />
@@ -100,11 +194,15 @@ const SketchBox = ({ cardId }) => {
                 </div>
 
                 <div className="tools-group">
-                    <button className="tool-btn" onClick={() => canvasRef.current?.undo()} title="Undo">
-                        <Undo size={18} />
-                    </button>
-                    <button className="tool-btn" onClick={() => canvasRef.current?.redo()} title="Redo">
-                        <Redo size={18} />
+                    <button
+                        className={`tool-btn ${penOnly ? 'active-subtle' : ''}`}
+                        onClick={() => setPenOnly(!penOnly)}
+                        title={penOnly ? "Pen Only Mode (Palm Rejection On)" : "Touch Drawing Enabled"}
+                    >
+                        {penOnly ? <MousePointer2 size={18} /> : <Hand size={18} />}
+                        <span className="text-xs ml-2 hidden sm:inline">
+                            {penOnly ? "Pen Only" : "Touch & Pen"}
+                        </span>
                     </button>
                 </div>
 
@@ -133,14 +231,13 @@ const SketchBox = ({ cardId }) => {
                         <Loader2 className="animate-spin text-primary" size={32} />
                     </div>
                 )}
-                <ReactSketchCanvas
+                <canvas
                     ref={canvasRef}
-                    strokeWidth={3}
-                    strokeColor="var(--text-primary)"
-                    canvasColor="transparent"
-                    eraserWidth={20}
-                    style={{ border: 'none' }}
-                    onStroke={() => setHasChanges(true)}
+                    onPointerDown={startDrawing}
+                    onPointerMove={draw}
+                    onPointerUp={stopDrawing}
+                    onPointerLeave={stopDrawing}
+                    style={{ touchAction: 'none', width: '100%', height: '100%' }}
                 />
             </div>
 
@@ -152,7 +249,7 @@ const SketchBox = ({ cardId }) => {
                     overflow: hidden;
                     display: flex;
                     flex-direction: column;
-                    height: 400px;
+                    height: 500px;
                     margin-top: var(--spacing-lg);
                 }
 
@@ -198,6 +295,12 @@ const SketchBox = ({ cardId }) => {
                     background: var(--color-primary);
                     color: white;
                 }
+                
+                .tool-btn.active-subtle {
+                    background: rgba(124, 58, 237, 0.2);
+                    color: var(--color-primary);
+                    border: 1px solid var(--color-primary);
+                }
 
                 .tool-btn.primary {
                     color: var(--color-primary);
@@ -213,6 +316,7 @@ const SketchBox = ({ cardId }) => {
                     background-image: radial-gradient(var(--border-color) 1px, transparent 1px);
                     background-size: 20px 20px;
                     cursor: crosshair;
+                    overflow: hidden;
                 }
             `}</style>
         </div>
