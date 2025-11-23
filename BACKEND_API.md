@@ -26,8 +26,9 @@
   Body: `{ "syllabus": <contenuto chem.json o fisica.json> }`  
   Upsert dei `syllabus_units`.  
 - `POST /generator/run`  
-  Body: `{ "units": ["chem_03_stoichiometry"], "tags": ["CHEM_STOICHIOMETRY_PH"], "num_cards": 10, "model": "gpt-5.1" }`  
-  Seleziona le unit (o tutte se `units` assente), chiama GPT-5.1 e inserisce le card. Response: `{ "created": 10, "job_id": 1 }`.
+  Body: `{ "units": ["chem_03_stoichiometry"], "tags": ["CHEM_STOICHIOMETRY_PH"], "num_cards": 10, "model": "gpt-5.1", "two_stage": false }`  
+  Seleziona le unit (o tutte se `units` assente), chiama GPT-5.1 e inserisce le card. Response: `{ "created": 10, "job_id": 1 }`.  
+  - `two_stage: true` abilita la generazione per-idea: 1) call LLM per brainstorm di idee/brief per unit/topic; 2) una call per card usando ciascun brief → maggiore qualità/precisione, meno batching.
 - `GET /generator/jobs` (alias `/api/generator/jobs`) → storico job di generazione.
 - `DELETE /generator/jobs/{job_id}/cards` → elimina tutte le card create da uno specifico job (rollback rapido di una generazione).
 - `DELETE /cards/by-syllabus/{syllabus_ref}` → elimina tutte le card (più attempts/sketch) di una unit specifica.
@@ -36,7 +37,9 @@
   Response (array): `{ card_id, syllabus_ref, dm418_tag, type, question, cloze_part, mcq_options, state, next_review }`.
 - `POST /cards/{card_id}/answer`  
   Body: `{ "outcome": "correct|wrong|skip", "duration_s": 24.5, "user_answer": "..." }`  
-  Aggiorna stato/scheduling, logga l'attempt (con risposta e commento) e, se l'esito è `wrong|skip`, restituisce il commento pre-generato della card (nessuna chiamata LLM qui). Response: `{ card: <CardOut>, comment: "<tutor feedback if wrong>" }`.
+  Aggiorna stato/scheduling, logga l'attempt (con risposta e commento) e, se l'esito è `wrong|skip`, restituisce il commento pre-generato della card (nessuna chiamata LLM qui).  
+  - CLOZE numeriche: è accettata una tolleranza (2.5% o 0.01 assoluto) tra `user_answer` e `cloze_part` per evitare falsi negativi dovuti ad arrotondamenti.  
+  Response: `{ card: <CardOut>, comment: "<tutor feedback if wrong>" }`.
 - `GET /cards/wrong?limit=&history_limit=5`  
   Restituisce le card con almeno un errore (tutte se `limit` assente o <=0). Response: `[ { card, stats: { avg_time_s, total_attempts, failures, last_answered_at, last_duration_s, wrong_answers[] }, recent_attempts: [{ outcome, duration_s, created_at, given_answer, comment }] } ]`.
 - `GET /cards/{card_id}/sketch` → `{ data_url, updated_at }` (se assente: `{ "data_url": null, "updated_at": null }`)  

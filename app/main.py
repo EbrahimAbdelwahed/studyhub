@@ -40,6 +40,7 @@ class GeneratorRequest(BaseModel):
     tags: Optional[List[str]] = None
     num_cards: int = 10
     model: str = "gpt-5.1"
+    two_stage: bool = False
 
 
 class AnswerPayload(BaseModel):
@@ -122,6 +123,8 @@ class SyllabusOut(BaseModel):
 
 
 LOOKAHEAD = timedelta(minutes=5)
+NUMERIC_REL_TOL = 0.025  # 2.5% tolerance for numeric cloze/answer matching
+NUMERIC_ABS_TOL = 0.01
 
 
 def _fallback_comment(card: Card, user_answer: Optional[str]) -> str:
@@ -236,14 +239,33 @@ def run_generator(request: GeneratorRequest):
         existing_questions = [q[0] if isinstance(q, tuple) else q for q in existing_questions_raw]
 
         try:
-            cards, skipped = generate_unique_cards(
-                units=units,
-                tags=request.tags,
-                num_cards=request.num_cards,
-                model=request.model,
-                existing_questions=existing_questions,
-                job_id=job.id,
-            )
+            if request.two_stage:
+                ideas = generate_ideas(units=units, tags=request.tags, num_ideas=request.num_cards, model=request.model)
+                unit_lookup = {u.id: u for u in units}
+                cards = []
+                skipped: List[str] = []
+                for idea in ideas:
+                    try:
+                        card = generate_card_from_idea(idea, unit_lookup=unit_lookup, model=request.model, job_id=job.id)
+                        norm_q = card.question.lower().strip()
+                        if norm_q in {q.lower().strip() for q in existing_questions}:
+                            skipped.append(card.question)
+                            continue
+                        cards.append(card)
+                        existing_questions.append(card.question)
+                    except HTTPException:
+                        skipped.append(str(idea))
+                if not cards:
+                    raise HTTPException(status_code=400, detail="Nessuna card generata dalle idee")
+            else:
+                cards, skipped = generate_unique_cards(
+                    units=units,
+                    tags=request.tags,
+                    num_cards=request.num_cards,
+                    model=request.model,
+                    existing_questions=existing_questions,
+                    job_id=job.id,
+                )
         except HTTPException as exc:
             job.status = "FAILED"
             job.error = str(exc.detail)
@@ -317,6 +339,19 @@ def answer_card(card_id: str, payload: AnswerPayload):
             raise HTTPException(status_code=404, detail="Card non trovata")
 
         outcome = payload.outcome
+
+        # Numeric tolerance for CLOZE when user's answer is close to the correct value
+        if outcome != "correct" and card.type == "CLOZE" and payload.user_answer and card.cloze_part:
+            try:
+                user_val = float(str(payload.user_answer).replace(",", "."))
+                target_val = float(str(card.cloze_part).replace(",", "."))
+                diff = abs(user_val - target_val)
+                rel = diff / max(abs(target_val), 1e-9)
+                if diff <= NUMERIC_ABS_TOL or rel <= NUMERIC_REL_TOL:
+                    outcome = "correct"
+            except Exception:
+                pass
+
         card.total_attempts += 1
         if outcome != "correct":
             card.failures += 1

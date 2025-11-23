@@ -2,7 +2,7 @@ import json
 import os
 import random
 import re
-from typing import List, Optional, Tuple
+from typing import List, Optional, Tuple, Dict, Any
 
 from fastapi import HTTPException
 from openai import OpenAI
@@ -171,6 +171,29 @@ def _normalize_mcq_answer_and_options(cloze_value: Optional[str], options: Optio
     return final_cloze, normalized_options
 
 
+def _nearest_numeric_option(cloze_value: Optional[str], options: List[str]) -> Optional[str]:
+    if cloze_value is None:
+        return None
+    if not options:
+        return cloze_value
+    try:
+        target = float(cloze_value)
+    except Exception:
+        return cloze_value
+    best = None
+    best_diff = None
+    for opt in options:
+        try:
+            val = float(opt)
+        except Exception:
+            continue
+        diff = abs(val - target)
+        if best_diff is None or diff < best_diff:
+            best_diff = diff
+            best = opt
+    return best or cloze_value
+
+
 def _build_user_prompt(
     units: List[SyllabusUnit],
     tags: Optional[List[str]],
@@ -296,6 +319,11 @@ def generate_cards(
             if mcq_options and cloze_value not in mcq_options:
                 cloze_value = mcq_options[0]
             cloze_value, mcq_options = _normalize_mcq_answer_and_options(cloze_value, mcq_options)
+            # Align numeric correct answer to nearest option to avoid rounding mismatches
+            if _is_numeric(cloze_value):
+                nearest = _nearest_numeric_option(cloze_value, mcq_options or [])
+                if nearest:
+                    cloze_value = nearest
         else:
             if _is_numeric(cloze_value):
                 cloze_value = _format_numeric(cloze_value)
@@ -369,3 +397,124 @@ def generate_unique_cards(
             cards.append(card)
 
     return cards, skipped
+
+
+def generate_ideas(
+    units: List[SyllabusUnit],
+    tags: Optional[List[str]],
+    num_ideas: int,
+    model: str = "gpt-5.1",
+) -> List[Dict[str, Any]]:
+    client = _get_client()
+    lines = []
+    lines.append(f"Proponi {num_ideas} idee di esercizi/QCM aderenti al syllabus DM418.")
+    if tags:
+        lines.append(f"Dai priorità a questi topic/tag: {', '.join(tags)}.")
+    lines.append("Non scrivere le domande complete; fornisci solo un breve brief per ciascuna idea (1-2 frasi) con il focus concettuale.")
+    lines.append("Output JSON: {\"ideas\": [ {\"syllabus_ref\": \"...\", \"topic\": \"...\", \"idea\": \"breve descrizione\"} ] }")
+    lines.append("Syllabus selezionato:")
+    for u in units:
+        topics = "; ".join(u.topics or [])
+        lines.append(f"- {u.id} ({u.title}) -> Topics: {topics}")
+    prompt = "\n".join(lines)
+    try:
+        resp = client.chat.completions.create(
+            model=model,
+            temperature=0.3,
+            response_format={"type": "json_object"},
+            messages=[
+                {"role": "system", "content": "Sei un planner di esercizi. Genera idee compatte per esercizi QCM/CLOZE, senza fornire testo completo."},
+                {"role": "user", "content": prompt},
+            ],
+        )
+        payload = resp.choices[0].message.content
+        data = json.loads(payload)
+        ideas = data.get("ideas", [])
+        return ideas
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=f"Errore generazione idee: {exc}")
+
+
+def generate_card_from_idea(
+    idea: Dict[str, Any],
+    unit_lookup: Dict[str, SyllabusUnit],
+    model: str = "gpt-5.1",
+    job_id: Optional[int] = None,
+) -> Card:
+    client = _get_client()
+    syllabus_ref = idea.get("syllabus_ref")
+    unit = unit_lookup.get(syllabus_ref)
+    if not unit:
+        raise HTTPException(status_code=400, detail=f"Syllabus unit {syllabus_ref} non trovata per idea {idea}")
+    topic = idea.get("topic") or (unit.topics[0] if unit.topics else unit.title or unit.id)
+    brief = idea.get("idea") or ""
+
+    prompt_lines = []
+    prompt_lines.append("Crea 1 card aderente al brief dato, rispettando il format JSON richiesto.")
+    prompt_lines.append(f"Syllabus unit: {unit.id} ({unit.title})")
+    prompt_lines.append(f"Topics: {', '.join(unit.topics or [])}")
+    prompt_lines.append(f"Brief: {brief}")
+    prompt = "\n".join(prompt_lines)
+
+    try:
+        response = client.chat.completions.create(
+            model=model,
+            temperature=0.25,
+            response_format={"type": "json_object"},
+            messages=[
+                {"role": "system", "content": SYSTEM_PROMPT},
+                {"role": "user", "content": prompt},
+            ],
+        )
+    except Exception as exc:
+        raise HTTPException(status_code=502, detail=f"Errore chiamata OpenAI (card da idea): {exc}")
+
+    content = response.choices[0].message.content
+    try:
+        data = json.loads(content)
+        payload_cards = data.get("cards", [])
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=f"Parsing risposta OpenAI (idea) fallito: {exc}")
+
+    if not payload_cards:
+        raise HTTPException(status_code=500, detail="Nessuna card generata dall'idea")
+
+    # Riusa la pipeline standard ma iniettando job_id e lookup
+    cards: List[Card] = []
+    for c in payload_cards:
+        cloze_value = c.get("cloze_part")
+        mcq_options = c.get("mcq_options")
+        comment = c.get("comment")
+        tag_value = (unit.topics[0] if unit.topics else unit.title or unit.id)
+
+        if c.get("type") == CardType.MCQ:
+            if not cloze_value:
+                inferred = _infer_mcq_answer(client, question=c.get("question"), options=mcq_options or [], model=model)
+                cloze_value = inferred or (mcq_options[0] if mcq_options else None)
+            if mcq_options and cloze_value not in mcq_options:
+                cloze_value = mcq_options[0]
+            cloze_value, mcq_options = _normalize_mcq_answer_and_options(cloze_value, mcq_options)
+            if _is_numeric(cloze_value):
+                nearest = _nearest_numeric_option(cloze_value, mcq_options or [])
+                if nearest:
+                    cloze_value = nearest
+        else:
+            if _is_numeric(cloze_value):
+                cloze_value = _format_numeric(cloze_value)
+        if not comment:
+            comment = _fallback_comment(c.get("question") or "", cloze_value, c.get("dm418_tag", ""))
+
+        card = Card(
+            syllabus_ref=c.get("syllabus_ref") or unit.id,
+            dm418_tag=tag_value,
+            generator_job_id=job_id,
+            type=c["type"],
+            question=c["question"],
+            comment=comment,
+            cloze_part=cloze_value,
+            mcq_options=mcq_options,
+            state=CardState.NEW,
+        )
+        ensure_next_review(card)
+        cards.append(card)
+    return cards[0]
