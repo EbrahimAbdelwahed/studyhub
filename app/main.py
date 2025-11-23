@@ -459,6 +459,41 @@ def delete_card(card_id: str):
         return {"ok": True}
 
 
+@app.delete("/cards/by-syllabus/{syllabus_ref}")
+def delete_cards_by_syllabus(syllabus_ref: str):
+    with db.get_session() as session:
+        cards = session.exec(select(Card).where(Card.syllabus_ref == syllabus_ref)).scalars().all()
+        if not cards:
+            return {"deleted_cards": 0, "deleted_attempts": 0, "deleted_sketches": 0}
+
+        card_ids = [c.card_id for c in cards]
+
+        deleted_attempts = 0
+        deleted_sketches = 0
+
+        if card_ids:
+            attempts = session.exec(select(Attempt).where(Attempt.card_id.in_(card_ids))).scalars().all()
+            for att in attempts:
+                session.delete(att)
+            deleted_attempts = len(attempts)
+
+            sketches = session.exec(select(CardSketch).where(CardSketch.card_id.in_(card_ids))).scalars().all()
+            for sk in sketches:
+                session.delete(sk)
+            deleted_sketches = len(sketches)
+
+        for card in cards:
+            session.delete(card)
+
+        session.commit()
+        return {
+            "deleted_cards": len(cards),
+            "deleted_attempts": deleted_attempts,
+            "deleted_sketches": deleted_sketches,
+            "syllabus_ref": syllabus_ref,
+        }
+
+
 @app.delete("/generator/jobs/{job_id}/cards")
 def delete_cards_by_job(job_id: int):
     with db.get_session() as session:
