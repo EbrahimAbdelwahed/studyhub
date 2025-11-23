@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import client from '../api/client';
 import { useSyllabus } from '../contexts/SyllabusContext';
-import { BookOpen } from 'lucide-react';
+import { BookOpen, Trash2 } from 'lucide-react';
 import '../styles/global.css';
 
 const Syllabus = () => {
@@ -9,7 +9,8 @@ const Syllabus = () => {
   const [stats, setStats] = useState({});
   const [loadingStats, setLoadingStats] = useState(true);
 
-  useEffect(() => {
+  const fetchStats = useCallback(() => {
+    setLoadingStats(true);
     client.get('/analytics/heatmap')
       .then(res => {
         // Transform array response to a map for easier lookup: { unitId: { score, status } }
@@ -24,6 +25,25 @@ const Syllabus = () => {
       .catch(err => console.error("Failed to fetch heatmap", err))
       .finally(() => setLoadingStats(false));
   }, []);
+
+  useEffect(() => {
+    fetchStats();
+  }, [fetchStats]);
+
+  const handleDeleteUnit = async (unitId, unitTitle) => {
+    if (!confirm(`Are you sure you want to clear all cards and progress for "${unitTitle || unitId}"? This cannot be undone.`)) {
+      return;
+    }
+
+    try {
+      await client.delete(`/cards/by-syllabus/${unitId}`);
+      // Refresh stats to show cleared status
+      fetchStats();
+    } catch (err) {
+      console.error('Failed to delete unit cards:', err);
+      alert('Failed to clear unit: ' + (err.response?.data?.detail || err.message));
+    }
+  };
 
   // Group syllabusList by subject
   const groupedSyllabus = React.useMemo(() => {
@@ -79,10 +99,24 @@ const Syllabus = () => {
                 {subject.children.map(unit => {
                   const unitStats = stats[unit.id] || {};
                   return (
-                    <div key={unit.id} className="unit-item">
-                      <div className="unit-name">{unit.title || unit.id}</div>
-                      <div className={`unit-status ${unitStats.status?.toLowerCase() || 'untouched'}`}>
-                        {unitStats.score || 0}%
+                    <div key={unit.id} className="unit-item group">
+                      <div className="flex items-center gap-3">
+                        <div className="unit-name">{unit.title || unit.id}</div>
+                      </div>
+                      <div className="flex items-center gap-4">
+                        <div className={`unit-status ${unitStats.status?.toLowerCase() || 'untouched'}`}>
+                          {unitStats.score || 0}%
+                        </div>
+                        <button
+                          onClick={(e) => {
+                            e.preventDefault();
+                            handleDeleteUnit(unit.id, unit.title);
+                          }}
+                          className="p-1.5 text-muted hover:text-red-500 hover:bg-red-500/10 rounded-md transition-colors opacity-0 group-hover:opacity-100"
+                          title="Clear all cards for this unit"
+                        >
+                          <Trash2 size={16} />
+                        </button>
                       </div>
                     </div>
                   );
@@ -140,6 +174,7 @@ const Syllabus = () => {
         .unit-item {
           display: flex;
           justify-content: space-between;
+          align-items: center;
           padding: var(--spacing-sm) var(--spacing-md);
           border-radius: var(--radius-sm);
           transition: background var(--transition-fast);
