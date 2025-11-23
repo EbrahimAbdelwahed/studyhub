@@ -10,7 +10,7 @@ from sqlalchemy import case, select, or_
 
 from . import db
 from .analytics import mastery_by_syllabus, error_taxonomy, velocity_trend
-from .generator import generate_cards, generate_unique_cards
+from .generator import generate_cards, generate_unique_cards, generate_ideas, generate_card_from_idea
 from .models import Card, CardState, Attempt, CardSketch, GeneratorJob, SyllabusUnit
 from .scheduler import ensure_next_review, update_card_state
 
