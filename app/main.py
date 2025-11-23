@@ -221,6 +221,7 @@ def import_defaults():
 
 @app.post("/generator/run", response_model=GeneratorResponse)
 def run_generator(request: GeneratorRequest):
+    # Fetch units in a short-lived session to avoid holding DB connections during LLM calls
     with db.get_session() as session:
         stmt = select(SyllabusUnit)
         if request.units:
@@ -228,74 +229,89 @@ def run_generator(request: GeneratorRequest):
         units = session.exec(stmt).scalars().all()
         if not units:
             raise HTTPException(status_code=400, detail="Nessuna unit trovata per i parametri richiesti")
+        units_snapshot = [SyllabusOut.model_validate(u) for u in units]
 
+    # Create job
+    with db.get_session() as session:
         job = GeneratorJob(
             status="RUNNING",
             requested_tags=request.tags,
             requested_units=request.units,
             num_cards=request.num_cards,
             model=request.model,
-            payload={"units": [u.id for u in units], "tags": request.tags},
+            payload={"units": [u.id for u in units_snapshot], "tags": request.tags},
         )
         session.add(job)
         session.commit()
         session.refresh(job)
+        job_id = job.id
 
-        unit_ids = [u.id for u in units]
+    unit_lookup = {u.id: u for u in units_snapshot}
+    unit_ids = list(unit_lookup.keys())
+
+    with db.get_session() as session:
         existing_questions_raw = session.exec(select(Card.question).where(Card.syllabus_ref.in_(unit_ids))).all()
         existing_questions = [q[0] if isinstance(q, tuple) else q for q in existing_questions_raw]
 
-        try:
-            if request.two_stage:
-                ideas = generate_ideas(units=units, tags=request.tags, num_ideas=request.num_cards, model=request.model)
-                unit_lookup = {u.id: u for u in units}
-                cards = []
-                skipped: List[str] = []
-                for idea in ideas:
-                    try:
-                        card = generate_card_from_idea(idea, unit_lookup=unit_lookup, model=request.model, job_id=job.id)
-                        norm_q = card.question.lower().strip()
-                        if norm_q in {q.lower().strip() for q in existing_questions}:
-                            skipped.append(card.question)
-                            continue
-                        cards.append(card)
-                        existing_questions.append(card.question)
-                    except HTTPException:
-                        skipped.append(str(idea))
-                if not cards:
-                    raise HTTPException(status_code=400, detail="Nessuna card generata dalle idee")
-            else:
-                cards, skipped = generate_unique_cards(
-                    units=units,
-                    tags=request.tags,
-                    num_cards=request.num_cards,
-                    model=request.model,
-                    existing_questions=existing_questions,
-                    job_id=job.id,
-                )
-        except HTTPException as exc:
-            job.status = "FAILED"
-            job.error = str(exc.detail)
-            job.updated_at = datetime.utcnow()
-            session.commit()
-            raise
+    try:
+        if request.two_stage:
+            ideas = generate_ideas(units=[SyllabusUnit.model_validate(u.model_dump()) for u in units_snapshot], tags=request.tags, num_ideas=request.num_cards, model=request.model)
+            cards = []
+            skipped: List[str] = []
+            for idea in ideas:
+                try:
+                    card = generate_card_from_idea(idea, unit_lookup={u.id: u for u in [SyllabusUnit.model_validate(us.model_dump()) for us in units_snapshot]}, model=request.model, job_id=job_id)
+                    norm_q = card.question.lower().strip()
+                    if norm_q in {q.lower().strip() for q in existing_questions}:
+                        skipped.append(card.question)
+                        continue
+                    cards.append(card)
+                    existing_questions.append(card.question)
+                except HTTPException:
+                    skipped.append(str(idea))
+            if not cards:
+                raise HTTPException(status_code=400, detail="Nessuna card generata dalle idee")
+        else:
+            cards, skipped = generate_unique_cards(
+                units=[SyllabusUnit.model_validate(u.model_dump()) for u in units_snapshot],
+                tags=request.tags,
+                num_cards=request.num_cards,
+                model=request.model,
+                existing_questions=existing_questions,
+                job_id=job_id,
+            )
+    except HTTPException as exc:
+        with db.get_session() as session:
+            job = session.get(GeneratorJob, job_id)
+            if job:
+                job.status = "FAILED"
+                job.error = str(exc.detail)
+                job.updated_at = datetime.utcnow()
+                session.commit()
+        raise
 
     if not cards:
-        job.status = "FAILED"
-        job.error = "Nessuna card unica generata"
-        job.updated_at = datetime.utcnow()
-        session.commit()
-        raise HTTPException(status_code=400, detail=job.error)
+        with db.get_session() as session:
+            job = session.get(GeneratorJob, job_id)
+            if job:
+                job.status = "FAILED"
+                job.error = "Nessuna card unica generata"
+                job.updated_at = datetime.utcnow()
+                session.commit()
+        raise HTTPException(status_code=400, detail="Nessuna card unica generata")
 
-    for card in cards:
-        session.add(card)
+    with db.get_session() as session:
+        for card in cards:
+            session.add(card)
 
-    job.status = "COMPLETED"
-    job.payload = {"units": unit_ids, "tags": request.tags, "skipped_duplicates": len(skipped)}
-    job.updated_at = datetime.utcnow()
-    session.commit()
+        job = session.get(GeneratorJob, job_id)
+        if job:
+            job.status = "COMPLETED"
+            job.payload = {"units": unit_ids, "tags": request.tags, "skipped_duplicates": len(skipped)}
+            job.updated_at = datetime.utcnow()
+            session.commit()
 
-    return GeneratorResponse(created=len(cards), job_id=job.id, skipped_duplicates=len(skipped))
+    return GeneratorResponse(created=len(cards), job_id=job_id, skipped_duplicates=len(skipped))
 
 
 @app.post("/generator/run-async", response_model=GeneratorResponse)
