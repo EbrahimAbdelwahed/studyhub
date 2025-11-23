@@ -23,34 +23,6 @@ Produci SOLO JSON valido con una lista 'cards'. Ogni card è MULTIPLE CHOICE (MC
 - Ordina le opzioni MCQ in modo da mescolare la corretta (non deve essere sempre la prima); tutte le opzioni devono sembrare plausibili.
 - Per espressioni matematiche/simboli usa LaTeX inline delimitato da $...$ (o \\(...\\)) così da essere renderizzato con KaTeX; non fare escape extra.
 - Aggiungi sempre un campo 'comment': breve spiegazione (2-3 frasi) che aiuti lo studente a ragionare e ricordare il concetto. Evita di ripetere integralmente la domanda; spiega come arrivare alla risposta corretta.
-Esempio MCQ (stile):
-{
-  "cards": [
-    {
-      "type": "MCQ",
-      "syllabus_ref": "phys_units_vectors",
-      "dm418_tag": "Notazione scientifica",
-      "question": "Due forze $3.2\\times10^2\\,\\text{N}$ e $1.6\\times10^2\\,\\text{N}$ sono parallele e concordi. Qual è la risultante in notazione scientifica?",
-      "cloze_part": "4.8e2",
-      "mcq_options": ["4.8e2", "3.2e2", "1.6e2", "6.4e2"],
-      "comment": "Somma vettoriale di forze parallele concordi: si sommano i moduli e si mantiene la direzione; 3.2e2 + 1.6e2 = 4.8e2 N."
-    }
-  ]
-}
-Esempio CLOZE (stile):
-{
-  "cards": [
-    {
-      "type": "CLOZE",
-      "syllabus_ref": "chem_ph",
-      "dm418_tag": "Acidi, Basi e pH",
-      "question": "Calcola il pH di una soluzione 0.010 M di HCl forte a 25°C.",
-      "cloze_part": "2",
-      "mcq_options": null,
-      "comment": "HCl è acido forte: [H+] = 0.010 M → pH = -log10(0.010) ≈ 2. L'aggiunta di cifre extra non è giustificata."
-    }
-  ]
-}
 Formato JSON di uscita:
 {
   "cards": [
@@ -145,7 +117,7 @@ def _build_user_prompt(
     lines = []
     lines.append(f"Genera {num_cards} card aderenti al syllabus DM418.")
     lines.append("Rendi le domande scenario-based con dati/valori realistici e almeno 2 passaggi di ragionamento; evita definizioni banali.")
-    lines.append("Imposta sempre dm418_tag uguale alla voce/ titolo esatto della unit del syllabus usata.")
+    lines.append("Imposta sempre dm418_tag uguale al topic principale (prima voce in 'topics') della unit del syllabus usata.")
     lines.append("Pensa brevemente prima di scrivere il JSON e poi restituisci solo il JSON.")
     if tags:
         lines.append(f"Usa questi TAG di competenza prioritari: {', '.join(tags)}.")
@@ -220,7 +192,7 @@ def generate_cards(
     exclude_questions: Optional[List[str]] = None,
 ) -> List[Card]:
     client = _get_client()
-    unit_lookup = {u.id: u.title or u.id for u in units}
+    unit_lookup = {u.id: (u.topics[0] if u.topics else u.title or u.id) for u in units}
     prompt = _build_user_prompt(units, tags, num_cards, exclude_questions)
     try:
         response = client.chat.completions.create(
