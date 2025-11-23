@@ -22,10 +22,17 @@ db.init_db()
 
 app = FastAPI(title="MedSprint Backend", version="0.1.0", root_path="/api")
 
+# CORS: allow explicit origins; if wildcard, disable credentials to satisfy browser rules.
+raw_origins = os.environ.get("ALLOWED_ORIGINS", "*")
+allowed_origins = [o.strip() for o in raw_origins.split(",") if o.strip()] or ["*"]
+allow_credentials = os.environ.get("ALLOW_CREDENTIALS", "true").lower() == "true"
+if "*" in allowed_origins:
+    allow_credentials = False
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
+    allow_origins=allowed_origins,
+    allow_credentials=allow_credentials,
     allow_methods=["*"],
     allow_headers=["*"],
 )
