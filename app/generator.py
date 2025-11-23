@@ -1,5 +1,7 @@
 import json
 import os
+import random
+import re
 from typing import List, Optional, Tuple
 
 from fastapi import HTTPException
@@ -15,7 +17,9 @@ Produci SOLO JSON valido con una lista 'cards'. Ogni card è MULTIPLE CHOICE (MC
 - Per MCQ crea 4 opzioni, una sola corretta, ordina in modo plausibile.
 - Per CLOZE usa una sola parola/numero per 'cloze_part' per validare la risposta.
 - Rispetta il tag DM418 indicato e il contesto del syllabus.
-- Domande concise, difficoltà medio-alta, niente trivia fuori syllabus.
+- Domande scenario-based, difficoltà medio-alta: richiedi 1-3 passaggi di ragionamento/calcolo, evita definizioni banali o pura memoria.
+- Per numeri e risultati usa al massimo 3 cifre significative; evita precisioni irrealistiche (mai 5+ cifre).
+- Ordina le opzioni MCQ in modo da mescolare la corretta (non deve essere sempre la prima); tutte le opzioni devono sembrare plausibili.
 - Per espressioni matematiche/simboli usa LaTeX inline delimitato da $...$ (o \\(...\\)) così da essere renderizzato con KaTeX; non fare escape extra.
 - Aggiungi sempre un campo 'comment': breve spiegazione (2-3 frasi) che aiuti lo studente a ragionare e ricordare il concetto. Evita di ripetere integralmente la domanda; spiega come arrivare alla risposta corretta.
 Formato JSON di uscita:
@@ -34,6 +38,8 @@ Formato JSON di uscita:
 }
 IMPORTANTE: Per le card MCQ, il campo 'cloze_part' DEVE contenere la stringa esatta della risposta corretta (che deve essere presente anche in mcq_options)."""
 
+_NUMERIC_REGEX = re.compile(r"^-?\d+(\.\d+)?([eE][-+]?\d+)?$")
+
 
 def _normalize_question(question: str) -> str:
     """Lowercase and collapse whitespace to spot near-identical questions."""
@@ -47,6 +53,60 @@ def _fallback_comment(question: str, correct: Optional[str], tag: str) -> str:
     return f"{base} Individua le informazioni essenziali e collegale ai passaggi logici necessari."
 
 
+def _is_numeric(text: Optional[str]) -> bool:
+    if not text:
+        return False
+    stripped = text.strip()
+    return bool(
+        stripped
+        and not any(c.isalpha() for c in stripped)
+        and _NUMERIC_REGEX.match(stripped)
+    )
+
+
+def _format_numeric(text: str, sig_figs: int = 3) -> str:
+    try:
+        val = float(text)
+    except Exception:
+        return text
+    # Use general format to keep significant figures and avoid trailing zeros
+    formatted = f"{val:.{sig_figs}g}"
+    return formatted
+
+
+def _normalize_mcq_answer_and_options(cloze_value: Optional[str], options: Optional[List[str]]) -> Tuple[Optional[str], List[str]]:
+    opts = options or []
+    normalized_options: List[str] = []
+    for opt in opts:
+        normalized_options.append(_format_numeric(opt) if _is_numeric(opt) else opt)
+
+    formatted_cloze = _format_numeric(cloze_value) if _is_numeric(cloze_value) else cloze_value
+
+    if formatted_cloze:
+        if formatted_cloze not in normalized_options:
+            normalized_options.append(formatted_cloze)
+
+    # Remove duplicates while preserving order
+    deduped: List[str] = []
+    seen = set()
+    for opt in normalized_options:
+        if opt in seen:
+            continue
+        seen.add(opt)
+        deduped.append(opt)
+    normalized_options = deduped
+
+    if normalized_options:
+        random.shuffle(normalized_options)
+
+    if formatted_cloze and formatted_cloze not in normalized_options:
+        normalized_options.append(formatted_cloze)
+        random.shuffle(normalized_options)
+
+    final_cloze = formatted_cloze or (normalized_options[0] if normalized_options else cloze_value)
+    return final_cloze, normalized_options
+
+
 def _build_user_prompt(
     units: List[SyllabusUnit],
     tags: Optional[List[str]],
@@ -55,6 +115,7 @@ def _build_user_prompt(
 ) -> str:
     lines = []
     lines.append(f"Genera {num_cards} card aderenti al syllabus DM418.")
+    lines.append("Rendi le domande scenario-based con dati/valori realistici e almeno 2 passaggi di ragionamento; evita definizioni banali.")
     if tags:
         lines.append(f"Usa questi TAG di competenza prioritari: {', '.join(tags)}.")
     lines.append("Syllabus selezionato:")
@@ -165,6 +226,10 @@ def generate_cards(
             # Ensure cloze_value matches one of the options; if not, default to first option
             if mcq_options and cloze_value not in mcq_options:
                 cloze_value = mcq_options[0]
+            cloze_value, mcq_options = _normalize_mcq_answer_and_options(cloze_value, mcq_options)
+        else:
+            if _is_numeric(cloze_value):
+                cloze_value = _format_numeric(cloze_value)
         if not comment:
             comment = _fallback_comment(c.get("question") or "", cloze_value, c.get("dm418_tag", ""))
 
