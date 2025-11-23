@@ -23,6 +23,69 @@ Produci SOLO JSON valido con una lista 'cards'. Ogni card è MULTIPLE CHOICE (MC
 - Ordina le opzioni MCQ in modo da mescolare la corretta (non deve essere sempre la prima); tutte le opzioni devono sembrare plausibili.
 - Per espressioni matematiche/simboli usa LaTeX inline delimitato da $...$ (o \\(...\\)) così da essere renderizzato con KaTeX; non fare escape extra.
 - Aggiungi sempre un campo 'comment': breve spiegazione (2-3 frasi) che aiuti lo studente a ragionare e ricordare il concetto. Evita di ripetere integralmente la domanda; spiega come arrivare alla risposta corretta.
+
+Esempi reali (stile):
+- Fisica MCQ:
+  {
+    "type": "MCQ",
+    "syllabus_ref": "phys_units_vectors",
+    "dm418_tag": "Oscillazioni e molle",
+    "question": "Una molla orizzontale (massa trascurabile) ha attaccato un cubetto di legno di massa m=7 kg. Il periodo di oscillazione è T=\\pi/3 s. Quanto vale k in SI?",
+    "cloze_part": "252",
+    "mcq_options": ["252\\pi", "126", "28", "252"],
+    "comment": "T=2\\pi\\sqrt{m/k} → k=4\\pi^2 m / T^2. Con m=7 kg e T=\\pi/3, k≈252 N/m."
+  }
+- Fisica CLOZE:
+  {
+    "type": "CLOZE",
+    "syllabus_ref": "phys_fluids_archimede",
+    "dm418_tag": "Galleggiamento e densità",
+    "question": "Una zattera di legno (densità 0.8 g/cm^3) di base 4 m e altezza 0.50 m galleggia in acqua. Quale percentuale dell'altezza è immersa?",
+    "cloze_part": "80",
+    "mcq_options": null,
+    "comment": "Spinta di Archimede → immersione = densità_relativa = 0.8. L'80% dell'altezza è sotto il pelo dell'acqua."
+  }
+- Chimica MCQ:
+  {
+    "type": "MCQ",
+    "syllabus_ref": "chem_inorganic_nomenclature",
+    "dm418_tag": "Sali e nomenclatura inorganica",
+    "question": "Quale tra le seguenti è la formula chimica del solfato di bario?",
+    "cloze_part": "BaSO4",
+    "mcq_options": ["BaSO4", "BaSO3", "BaS", "BaHSO4"],
+    "comment": "Il solfato è SO4^2− e il bario è Ba^2+: si combinano 1:1 → BaSO4."
+  }
+- Chimica CLOZE:
+  {
+    "type": "CLOZE",
+    "syllabus_ref": "chem_electrochemistry",
+    "dm418_tag": "Elettrochimica e termodinamica",
+    "question": "La relazione tra ΔG e il potenziale di cella elettrochimica E è ΔG = …",
+    "cloze_part": "-nFE",
+    "mcq_options": null,
+    "comment": "Per una cella, la variazione di energia libera è legata al lavoro elettrico: ΔG = -nFE."
+  }
+- Biologia MCQ:
+  {
+    "type": "MCQ",
+    "syllabus_ref": "bio_genetics",
+    "dm418_tag": "Genetica mendeliana e estensioni",
+    "question": "Il sistema dei gruppi sanguigni AB0 è un classico esempio di:",
+    "cloze_part": "Codominanza",
+    "mcq_options": ["Codominanza", "Dominanza incompleta", "Eredità poligenica", "Penetranza incompleta"],
+    "comment": "Gli alleli IA e IB sono entrambi espressi: fenotipo AB → codominanza."
+  }
+- Biologia CLOZE:
+  {
+    "type": "CLOZE",
+    "syllabus_ref": "bio_citologia_mitosi",
+    "dm418_tag": "Ciclo cellulare e mitosi",
+    "question": "Lo stadio mitotico in cui i cromosomi si allineano sulla piastra equatoriale è …, quello in cui iniziano a separarsi è …",
+    "cloze_part": "metafase, anafase",
+    "mcq_options": null,
+    "comment": "Metafase: allineamento; anafase: separazione delle cromatidi."
+  }
+
 Formato JSON di uscita:
 {
   "cards": [
