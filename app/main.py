@@ -273,12 +273,12 @@ def run_generator(request: GeneratorRequest):
                     existing_questions=existing_questions,
                     job_id=job.id,
                 )
-    except HTTPException as exc:
-        job.status = "FAILED"
-        job.error = str(exc.detail)
-        job.updated_at = datetime.utcnow()
-        session.commit()
-        raise
+        except HTTPException as exc:
+            job.status = "FAILED"
+            job.error = str(exc.detail)
+            job.updated_at = datetime.utcnow()
+            session.commit()
+            raise
 
     if not cards:
         job.status = "FAILED"
