@@ -43,3 +43,4 @@ def _run_migrations() -> None:
     # Backfill comment on Card for pre-generated feedback
     if inspector.has_table("card"):
         ensure_column("card", "comment", "TEXT")
+        ensure_column("card", "generator_job_id", "INTEGER")

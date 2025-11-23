@@ -242,6 +242,7 @@ def run_generator(request: GeneratorRequest):
                 num_cards=request.num_cards,
                 model=request.model,
                 existing_questions=existing_questions,
+                job_id=job.id,
             )
         except HTTPException as exc:
             job.status = "FAILED"
@@ -456,6 +457,20 @@ def delete_card(card_id: str):
         session.delete(card)
         session.commit()
         return {"ok": True}
+
+
+@app.delete("/generator/jobs/{job_id}/cards")
+def delete_cards_by_job(job_id: int):
+    with db.get_session() as session:
+        job = session.get(GeneratorJob, job_id)
+        if not job:
+            raise HTTPException(status_code=404, detail="Generator job not found")
+        deleted = session.exec(select(Card).where(Card.generator_job_id == job_id)).scalars().all()
+        count = len(deleted)
+        for card in deleted:
+            session.delete(card)
+        session.commit()
+        return {"deleted": count, "job_id": job_id}
 
 
 @app.get("/cards/{card_id}/sketch", response_model=SketchOut)

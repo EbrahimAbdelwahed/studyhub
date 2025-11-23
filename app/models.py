@@ -41,6 +41,7 @@ class Card(SQLModel, table=True):
     card_id: str = Field(default_factory=lambda: str(uuid.uuid4()), primary_key=True, index=True)
     syllabus_ref: str = Field(foreign_key="syllabusunit.id")
     dm418_tag: str
+    generator_job_id: Optional[int] = Field(default=None, foreign_key="generatorjob.id")
     type: str
     question: str
     comment: Optional[str] = None

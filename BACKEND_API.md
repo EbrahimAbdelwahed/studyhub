@@ -28,6 +28,8 @@
 - `POST /generator/run`  
   Body: `{ "units": ["chem_03_stoichiometry"], "tags": ["CHEM_STOICHIOMETRY_PH"], "num_cards": 10, "model": "gpt-5.1" }`  
   Seleziona le unit (o tutte se `units` assente), chiama GPT-5.1 e inserisce le card. Response: `{ "created": 10, "job_id": 1 }`.
+- `GET /generator/jobs` (alias `/api/generator/jobs`) → storico job di generazione.
+- `DELETE /generator/jobs/{job_id}/cards` → elimina tutte le card create da uno specifico job (rollback rapido di una generazione).
 - `GET /cards/next?limit=10&include_new=true`  
   Restituisce buffer ordinato per priorità `CRITICAL > CONFIRMATION > CONSOLIDATION > NEW`, includendo card con `next_review` entro 5 minuti o NEW.  
   Response (array): `{ card_id, syllabus_ref, dm418_tag, type, question, cloze_part, mcq_options, state, next_review }`.

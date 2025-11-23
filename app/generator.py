@@ -253,6 +253,7 @@ def generate_cards(
     num_cards: int,
     model: str = "gpt-5.1",
     exclude_questions: Optional[List[str]] = None,
+    job_id: Optional[int] = None,
 ) -> List[Card]:
     client = _get_client()
     unit_lookup = {u.id: (u.topics[0] if u.topics else u.title or u.id) for u in units}
@@ -304,6 +305,7 @@ def generate_cards(
         card = Card(
             syllabus_ref=c["syllabus_ref"],
             dm418_tag=tag_value,
+            generator_job_id=job_id,
             type=c["type"],
             question=c["question"],
             comment=comment,
@@ -324,6 +326,7 @@ def generate_unique_cards(
     model: str = "gpt-5.1",
     existing_questions: Optional[List[str]] = None,
     max_rounds: int = 3,
+    job_id: Optional[int] = None,
 ) -> Tuple[List[Card], List[str]]:
     """
     Generate cards while filtering duplicates against existing questions and within the batch.
@@ -345,6 +348,7 @@ def generate_unique_cards(
             num_cards=remaining,
             model=model,
             exclude_questions=recent_for_prompt,
+            job_id=job_id,
         )
 
         if not batch:
