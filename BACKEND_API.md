@@ -27,8 +27,10 @@
   Upsert dei `syllabus_units`.  
 - `POST /generator/run`  
   Body: `{ "units": ["chem_03_stoichiometry"], "tags": ["CHEM_STOICHIOMETRY_PH"], "num_cards": 10, "model": "gpt-5.1", "two_stage": false }`  
-  Seleziona le unit (o tutte se `units` assente), chiama GPT-5.1 e inserisce le card. Response: `{ "created": 10, "job_id": 1 }`.  
+  Seleziona le unit (o tutte se `units` assente), chiama GPT-5.1 e inserisce le card in modo sincrono. Response: `{ "created": 10, "job_id": 1 }`.  
   - `two_stage: true` abilita la generazione per-idea: 1) call LLM per brainstorm di idee/brief per unit/topic; 2) una call per card usando ciascun brief → maggiore qualità/precisione, meno batching.
+- `POST /generator/run-async`  
+  Stessa body di `/generator/run`, ma esegue in background con chiamate per-card (evita timeout). Response immediata `{ "created": 0, "job_id": <id> }`; controllare progresso via `/generator/jobs`.
 - `GET /generator/jobs` (alias `/api/generator/jobs`) → storico job di generazione.
 - `DELETE /generator/jobs/{job_id}/cards` → elimina tutte le card create da uno specifico job (rollback rapido di una generazione).
 - `DELETE /cards/by-syllabus/{syllabus_ref}` → elimina tutte le card (più attempts/sketch) di una unit specifica.

@@ -4,7 +4,7 @@ from datetime import datetime, timedelta
 from typing import List, Optional
 
 from dotenv import load_dotenv
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, BackgroundTasks
 from pydantic import BaseModel, Field, ConfigDict
 from sqlalchemy import case, select, or_
 
@@ -266,29 +266,55 @@ def run_generator(request: GeneratorRequest):
                     existing_questions=existing_questions,
                     job_id=job.id,
                 )
-        except HTTPException as exc:
-            job.status = "FAILED"
-            job.error = str(exc.detail)
-            job.updated_at = datetime.utcnow()
-            session.commit()
-            raise
-
-        if not cards:
-            job.status = "FAILED"
-            job.error = "Nessuna card unica generata"
-            job.updated_at = datetime.utcnow()
-            session.commit()
-            raise HTTPException(status_code=400, detail=job.error)
-
-        for card in cards:
-            session.add(card)
-
-        job.status = "COMPLETED"
-        job.payload = {"units": unit_ids, "tags": request.tags, "skipped_duplicates": len(skipped)}
+    except HTTPException as exc:
+        job.status = "FAILED"
+        job.error = str(exc.detail)
         job.updated_at = datetime.utcnow()
         session.commit()
+        raise
 
-        return GeneratorResponse(created=len(cards), job_id=job.id, skipped_duplicates=len(skipped))
+    if not cards:
+        job.status = "FAILED"
+        job.error = "Nessuna card unica generata"
+        job.updated_at = datetime.utcnow()
+        session.commit()
+        raise HTTPException(status_code=400, detail=job.error)
+
+    for card in cards:
+        session.add(card)
+
+    job.status = "COMPLETED"
+    job.payload = {"units": unit_ids, "tags": request.tags, "skipped_duplicates": len(skipped)}
+    job.updated_at = datetime.utcnow()
+    session.commit()
+
+    return GeneratorResponse(created=len(cards), job_id=job.id, skipped_duplicates=len(skipped))
+
+
+@app.post("/generator/run-async", response_model=GeneratorResponse)
+def run_generator_async(request: GeneratorRequest, background_tasks: BackgroundTasks):
+    with db.get_session() as session:
+        stmt = select(SyllabusUnit)
+        if request.units:
+            stmt = stmt.where(SyllabusUnit.id.in_(request.units))
+        units = session.exec(stmt).scalars().all()
+        if not units:
+            raise HTTPException(status_code=400, detail="Nessuna unit trovata per i parametri richiesti")
+
+        job = GeneratorJob(
+            status="QUEUED",
+            requested_tags=request.tags,
+            requested_units=request.units,
+            num_cards=request.num_cards,
+            model=request.model,
+            payload={"units": [u.id for u in units], "tags": request.tags, "mode": "two_stage" if request.two_stage else "per_card"},
+        )
+        session.add(job)
+        session.commit()
+        session.refresh(job)
+
+    background_tasks.add_task(_process_generator_job, job.id, request)
+    return GeneratorResponse(created=0, job_id=job.id, skipped_duplicates=0)
 
 
 @app.get("/generator/jobs", response_model=List[GeneratorJob])
@@ -582,3 +608,109 @@ def delete_card_sketch(card_id: str):
         session.delete(sketch)
         session.commit()
         return {"deleted": True}
+def _process_generator_job(job_id: int, request: GeneratorRequest):
+    # Background worker: per-card generation to avoid long synchronous requests.
+    with db.get_session() as session:
+        job = session.get(GeneratorJob, job_id)
+        if not job:
+            return
+        # Prepare units
+        stmt = select(SyllabusUnit)
+        if request.units:
+            stmt = stmt.where(SyllabusUnit.id.in_(request.units))
+        units = session.exec(stmt).scalars().all()
+        if not units:
+            job.status = "FAILED"
+            job.error = "Nessuna unit trovata per i parametri richiesti"
+            job.updated_at = datetime.utcnow()
+            session.commit()
+            return
+
+    unit_lookup = {u.id: u for u in units}
+    existing_questions_raw = session.exec(select(Card.question).where(Card.syllabus_ref.in_(list(unit_lookup.keys())))).all()
+    existing_questions = [q[0] if isinstance(q, tuple) else q for q in existing_questions_raw]
+
+    created = 0
+    skipped = 0
+    ideas_cache: List[Dict[str, str]] = []
+
+    # Two-stage: pre-brainstorm ideas
+    if request.two_stage:
+        try:
+            ideas_cache = generate_ideas(units=units, tags=request.tags, num_ideas=request.num_cards, model=request.model)
+        except HTTPException as exc:
+            with db.get_session() as session:
+                job = session.get(GeneratorJob, job_id)
+                job.status = "FAILED"
+                job.error = str(exc.detail)
+                job.updated_at = datetime.utcnow()
+                session.commit()
+            return
+
+    with db.get_session() as session:
+        job = session.get(GeneratorJob, job_id)
+        job.status = "RUNNING"
+        job.updated_at = datetime.utcnow()
+        job.payload = {"units": [u.id for u in units], "tags": request.tags, "mode": "two_stage" if request.two_stage else "per_card"}
+        session.commit()
+
+    for i in range(request.num_cards):
+        try:
+            if request.two_stage:
+                if i < len(ideas_cache):
+                    idea = ideas_cache[i]
+                else:
+                    # Fallback: generate a new idea if not enough
+                    idea = {
+                        "syllabus_ref": request.units[0] if request.units else units[0].id,
+                        "topic": unit_lookup.get(request.units[0] if request.units else units[0].id).topics[0] if unit_lookup.get(request.units[0] if request.units else units[0].id).topics else "",
+                        "idea": "Esercizio applicativo sui concetti principali della unit.",
+                    }
+                card = generate_card_from_idea(idea, unit_lookup=unit_lookup, model=request.model, job_id=job_id)
+                norm_q = _normalize_question(card.question)
+                if norm_q in {_normalize_question(q) for q in existing_questions}:
+                    skipped += 1
+                    continue
+                existing_questions.append(card.question)
+            else:
+                # Per-card direct generation: one LLM call per card
+                cards, _ = generate_unique_cards(
+                    units=units,
+                    tags=request.tags,
+                    num_cards=1,
+                    model=request.model,
+                    existing_questions=existing_questions,
+                    max_rounds=1,
+                    job_id=job_id,
+                )
+                if not cards:
+                    skipped += 1
+                    continue
+                card = cards[0]
+                existing_questions.append(card.question)
+
+            with db.get_session() as session:
+                session.add(card)
+                session.commit()
+            created += 1
+        except HTTPException:
+            skipped += 1
+            continue
+        except Exception as exc:
+            skipped += 1
+            continue
+
+        # Update progress periodically
+        if created % 5 == 0 or (created + skipped) == request.num_cards:
+            with db.get_session() as session:
+                job = session.get(GeneratorJob, job_id)
+                job.payload = {**(job.payload or {}), "created": created, "skipped": skipped}
+                job.updated_at = datetime.utcnow()
+                session.commit()
+
+    with db.get_session() as session:
+        job = session.get(GeneratorJob, job_id)
+        job.status = "COMPLETED"
+        job.payload = {**(job.payload or {}), "created": created, "skipped": skipped}
+        job.updated_at = datetime.utcnow()
+        session.commit()
