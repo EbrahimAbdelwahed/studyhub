@@ -1,3 +1,4 @@
+import React, { useEffect, useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Check, X, ArrowRight, AlertTriangle, ChevronRight } from 'lucide-react';
 import { useSyllabus } from '../contexts/SyllabusContext';
@@ -6,7 +7,7 @@ import 'katex/dist/katex.min.css';
 import '../styles/global.css';
 
 const LatexRenderer = ({ text }) => {
-  const containerRef = React.useRef(null);
+  const containerRef = useRef(null);
 
   useEffect(() => {
     if (containerRef.current) {
