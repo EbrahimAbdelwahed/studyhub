@@ -98,12 +98,12 @@ const Card = ({ card, onAnswer, feedback, onNext }) => {
 
     if (isCorrect) {
       setStatus('correct');
-      setTimeout(() => onAnswer('correct', 20), 1000);
+      setTimeout(() => onAnswer('correct', 20, answer), 1000);
     } else {
       setStatus('wrong');
       setShake(prev => prev + 1);
       // Don't auto-advance for wrong answers, wait for feedback display
-      onAnswer('wrong', 20);
+      onAnswer('wrong', 20, answer);
     }
   };
 
@@ -146,7 +146,7 @@ const Card = ({ card, onAnswer, feedback, onNext }) => {
               <h3 className="text-xl font-bold text-red-500">Card Error</h3>
               <p className="text-muted mt-2">Missing answer key. This card cannot be graded.</p>
               <button
-                onClick={() => onAnswer('skip', 0)}
+                onClick={() => onAnswer('skip', 0, null)}
                 className="mt-6 px-4 py-2 bg-slate-700 hover:bg-slate-600 rounded text-white transition-colors"
               >
                 Skip Card

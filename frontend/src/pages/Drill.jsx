@@ -41,14 +41,15 @@ const Drill = () => {
 
     const [feedback, setFeedback] = useState(null);
 
-    const handleAnswer = async (outcome, duration) => {
+    const handleAnswer = async (outcome, duration, userAnswer = null) => {
         const card = queue[currentCardIndex];
         let comment = null;
 
         try {
             const res = await client.post(`/cards/${card.card_id}/answer`, {
                 outcome,
-                duration_s: duration
+                duration_s: duration,
+                user_answer: userAnswer
             });
             if (res.data.comment) {
                 comment = res.data.comment;
