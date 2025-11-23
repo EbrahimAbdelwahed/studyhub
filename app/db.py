@@ -34,7 +34,7 @@ def _run_migrations() -> None:
         if column in existing:
             return
         with engine.begin() as conn:
-            conn.exec_driver_sql(f"ALTER TABLE {table} ADD COLUMN {ddl}")
+            conn.exec_driver_sql(f"ALTER TABLE {table} ADD COLUMN {column} {ddl}")
 
     # Backfill new fields on Attempt for analytics/history
     if inspector.has_table("attempt"):
