@@ -32,8 +32,13 @@
   Restituisce buffer ordinato per priorità `CRITICAL > CONFIRMATION > CONSOLIDATION > NEW`, includendo card con `next_review` entro 5 minuti o NEW.  
   Response (array): `{ card_id, syllabus_ref, dm418_tag, type, question, cloze_part, mcq_options, state, next_review }`.
 - `POST /cards/{card_id}/answer`  
-  Body: `{ "outcome": "correct|wrong|skip", "duration_s": 24.5 }`  
-  Aggiorna stato/scheduling e logga attempt. Response: card aggiornata con `next_review`.
+  Body: `{ "outcome": "correct|wrong|skip", "duration_s": 24.5, "user_answer": "..." }`  
+  Aggiorna stato/scheduling, logga l'attempt (con risposta e commento) e, se l'esito è `wrong|skip`, restituisce il commento pre-generato della card (nessuna chiamata LLM qui). Response: `{ card: <CardOut>, comment: "<tutor feedback if wrong>" }`.
+- `GET /cards/wrong?limit=&history_limit=5`  
+  Restituisce le card con almeno un errore (tutte se `limit` assente o <=0). Response: `[ { card, stats: { avg_time_s, total_attempts, failures, last_answered_at, last_duration_s, wrong_answers[] }, recent_attempts: [{ outcome, duration_s, created_at, given_answer, comment }] } ]`.
+- `GET /cards/{card_id}/sketch` → `{ data_url, updated_at }` (se assente: `{ "data_url": null, "updated_at": null }`)  
+- `PUT /cards/{card_id}/sketch` Body: `{ "data_url": "data:image/png;base64,..." }`  
+- `DELETE /cards/{card_id}/sketch` → `{ deleted: true|false }`
 - `GET /syllabus`  
   Restituisce la lista completa delle unit con metadati e topics. Usare per costruire mappe `syllabus_ref -> titolo/competenza` lato frontend.
 - Analytics (contratti aderenti a `analytics_metrics.md`):
@@ -49,6 +54,7 @@
   "dm418_tag": "CHEM_STOICHIOMETRY_PH",
   "type": "CLOZE | MCQ",
   "question": "Calcola il pH di una soluzione 0.01 M di HCl.",
+  "comment": "Commento breve su come ragionare e sul concetto chiave.",
   "cloze_part": "2",
   "mcq_options": ["1", "2", "3", "4"],
   "state": "CRITICAL",
@@ -57,9 +63,10 @@
 ```
 
 ## Generator (GPT-5.1)
-- Prompt di sistema ottimizzato per domande ammissione Med/Odo/Vet, output solo JSON con lista `cards`.
+- Prompt di sistema ottimizzato per domande ammissione Med/Odo/Vet, output solo JSON con lista `cards` e commenti sintetici.
 - Input lato backend: lista `syllabus_units` (id, titolo, topics) + `tags` + `num_cards`.
 - Richiede `OPENAI_API_KEY`; opzionale `OPENAI_BASE_URL` per proxy/self-host.
+- Per formule e simboli matematici il generatore usa LaTeX inline (`$...$` o `\\(...\\)`), compatibile con KaTeX lato frontend.
 
 ## Performance UX hint
 - `limit` di `/cards/next` default 10 per buffer continuo (target <10s per card coperto).
@@ -71,3 +78,5 @@
 - `skip` = "Non so" gestito come errore per scheduling e error rate.
 - Colori errori conformi a Tailwind (`#EF4444`, `#F59E0B`, `#10B981`).
 - Mastery status: `SAFE >=80`, `WARNING 50-79.9`, `RISK <50`.
+- Il vecchio healer MCQ è stato rimosso. Usare il commento restituito da `/cards/{id}/answer` (pre-generato con la card) per mostrare feedback immediato se l'esito è `wrong|skip`.
+- Le sketch note vanno salvate/riprese con gli endpoint `/cards/{id}/sketch` (data URL base64).

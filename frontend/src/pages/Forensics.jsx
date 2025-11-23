@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import client from '../api/client';
 import ErrorTaxonomyChart from '../components/ErrorTaxonomyChart';
-import HealerPanel from '../components/HealerPanel';
+import WrongCardsView from '../components/WrongCardsView';
 import { Loader2 } from 'lucide-react';
 import '../styles/global.css';
 
@@ -39,7 +39,7 @@ const Forensics = () => {
                 </div>
             </div>
 
-            <HealerPanel />
+            <WrongCardsView />
 
             <style>{`
         .forensics-page {

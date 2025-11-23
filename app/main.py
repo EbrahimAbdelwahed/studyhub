@@ -10,9 +10,9 @@ from sqlalchemy import case, select, or_
 
 from . import db
 from .analytics import mastery_by_syllabus, error_taxonomy, velocity_trend
-from .generator import generate_cards, generate_unique_cards, _get_client, _infer_mcq_answer
-from .models import Card, CardState, CardType, Attempt, GeneratorJob, SyllabusUnit
-from .scheduler import ensure_next_review, update_card_state, score_delta
+from .generator import generate_cards, generate_unique_cards
+from .models import Card, CardState, Attempt, CardSketch, GeneratorJob, SyllabusUnit
+from .scheduler import ensure_next_review, update_card_state
 
 
 from fastapi.middleware.cors import CORSMiddleware
@@ -45,24 +45,66 @@ class GeneratorRequest(BaseModel):
 class AnswerPayload(BaseModel):
     outcome: str = Field(pattern="^(correct|wrong|skip)$")
     duration_s: float = 30.0
+    user_answer: Optional[str] = None
 
 
 class CardOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True, extra="ignore")
     card_id: str
     syllabus_ref: str
     dm418_tag: str
     type: str
     question: str
+    comment: Optional[str] = None
     cloze_part: Optional[str] = None
     mcq_options: Optional[List[str]] = None
     state: str
     next_review: Optional[datetime] = None
 
 
+class AttemptOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True, extra="ignore")
+    outcome: str
+    duration_s: float
+    created_at: datetime
+    given_answer: Optional[str] = None
+    comment: Optional[str] = None
+
+
+class CardStatsOut(BaseModel):
+    avg_time_s: float
+    total_attempts: int
+    failures: int
+    last_answered_at: Optional[datetime] = None
+    last_duration_s: Optional[float] = None
+    wrong_answers: List[str] = Field(default_factory=list)
+
+
+class WrongCardOut(BaseModel):
+    card: CardOut
+    stats: CardStatsOut
+    recent_attempts: List[AttemptOut]
+
+
 class GeneratorResponse(BaseModel):
     created: int
     job_id: Optional[int] = None
     skipped_duplicates: int = 0
+
+
+class CardAnswerResponse(BaseModel):
+    card: CardOut
+    comment: Optional[str] = None
+
+
+class SketchPayload(BaseModel):
+    data_url: str
+
+
+class SketchOut(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    data_url: Optional[str] = None
+    updated_at: Optional[datetime] = None
 
 
 class SyllabusOut(BaseModel):
@@ -80,6 +122,14 @@ class SyllabusOut(BaseModel):
 
 
 LOOKAHEAD = timedelta(minutes=5)
+
+
+def _fallback_comment(card: Card, user_answer: Optional[str]) -> str:
+    correct = card.cloze_part or "la risposta corretta"
+    base = "Ripassa il concetto chiave e i passaggi logici che portano alla soluzione."
+    if user_answer:
+        return f"{base} La tua risposta '{user_answer}' non centra il punto; la risposta corretta è '{correct}'."
+    return f"{base} La risposta corretta è '{correct}'."
 
 
 @app.post("/import/syllabus")
@@ -256,7 +306,7 @@ def fetch_next_cards(limit: int = 10, include_new: bool = True, card_type: Optio
         return [CardOut(**card.dict()) for card in cards]
 
 
-@app.post("/cards/{card_id}/answer", response_model=CardOut)
+@app.post("/cards/{card_id}/answer", response_model=CardAnswerResponse)
 def answer_card(card_id: str, payload: AnswerPayload):
     now = datetime.utcnow()
     with db.get_session() as session:
@@ -276,12 +326,70 @@ def answer_card(card_id: str, payload: AnswerPayload):
         update_card_state(card, outcome, now)
         card.updated_at = now
 
-        attempt = Attempt(card_id=card.card_id, outcome=outcome, duration_s=payload.duration_s, created_at=now)
+        feedback_comment = None
+        if outcome != "correct":
+            feedback_comment = card.comment or _fallback_comment(card, payload.user_answer)
+
+        attempt = Attempt(
+            card_id=card.card_id,
+            outcome=outcome,
+            duration_s=payload.duration_s,
+            given_answer=payload.user_answer,
+            comment=feedback_comment,
+            created_at=now,
+        )
         session.add(attempt)
 
         session.commit()
         session.refresh(card)
-        return CardOut(**card.dict())
+        return CardAnswerResponse(card=CardOut(**card.dict()), comment=feedback_comment)
+
+
+@app.get("/cards/wrong", response_model=List[WrongCardOut])
+def list_wrong_cards(limit: Optional[int] = None, history_limit: int = 5):
+    history_limit = max(1, min(history_limit, 20))
+    with db.get_session() as session:
+        stmt = select(Card).where(Card.failures > 0).order_by(Card.updated_at.desc())
+        if limit and limit > 0:
+            stmt = stmt.limit(limit)
+        cards = session.exec(stmt).scalars().all()
+
+        payload: List[WrongCardOut] = []
+        for card in cards:
+            attempts = (
+                session.exec(
+                    select(Attempt)
+                    .where(Attempt.card_id == card.card_id)
+                    .order_by(Attempt.created_at.desc())
+                    .limit(history_limit)
+                )
+                .scalars()
+                .all()
+            )
+            last_attempt = attempts[0] if attempts else None
+            wrong_answers: List[str] = []
+            seen_answers = set()
+            for a in attempts:
+                if a.outcome == "correct":
+                    continue
+                if a.given_answer and a.given_answer not in seen_answers:
+                    seen_answers.add(a.given_answer)
+                    wrong_answers.append(a.given_answer)
+            payload.append(
+                WrongCardOut(
+                    card=CardOut(**card.dict()),
+                    stats=CardStatsOut(
+                        avg_time_s=card.avg_time_s,
+                        total_attempts=card.total_attempts,
+                        failures=card.failures,
+                        last_answered_at=last_attempt.created_at if last_attempt else None,
+                        last_duration_s=last_attempt.duration_s if last_attempt else None,
+                        wrong_answers=wrong_answers,
+                    ),
+                    recent_attempts=[AttemptOut.model_validate(a) for a in attempts],
+                )
+            )
+        return payload
 
 
 @app.get("/analytics/heatmap")
@@ -349,52 +457,42 @@ def delete_card(card_id: str):
         return {"ok": True}
 
 
-@app.post("/maintenance/heal-mcq-cloze")
-@app.post("/api/maintenance/heal-mcq-cloze")  # alias to survive double-prefix setups
-def heal_mcq_cloze(try_infer: bool = True, model: str = "gpt-5.1", limit: int = 200):
-    """
-    Sanitize existing MCQ cards missing cloze_part by inferring the correct option
-    (when possible) or defaulting to the first option to avoid UI breakage.
-    """
+@app.get("/cards/{card_id}/sketch", response_model=SketchOut)
+def get_card_sketch(card_id: str):
     with db.get_session() as session:
-        missing_cards = session.exec(
-            select(Card).where(
-                Card.type == CardType.MCQ,
-                or_(Card.cloze_part.is_(None), Card.cloze_part == "")
-            ).limit(limit)
-        ).scalars().all()
+        sketch = session.get(CardSketch, card_id)
+        if not sketch:
+            return SketchOut()
+        return SketchOut(**sketch.dict())
 
-        if not missing_cards:
-            return {"scanned": 0, "updated": 0, "inferred": 0, "defaulted": 0}
 
-        client = _get_client() if try_infer else None
-        updated = inferred = defaulted = 0
+@app.put("/cards/{card_id}/sketch", response_model=SketchOut)
+def save_card_sketch(card_id: str, payload: SketchPayload):
+    now = datetime.utcnow()
+    with db.get_session() as session:
+        card = session.get(Card, card_id)
+        if not card:
+            raise HTTPException(status_code=404, detail="Card not found")
 
-        for card in missing_cards:
-            answer = None
-            options = card.mcq_options or []
+        sketch = session.get(CardSketch, card_id)
+        if not sketch:
+            sketch = CardSketch(card_id=card_id, data_url=payload.data_url, updated_at=now)
+        else:
+            sketch.data_url = payload.data_url
+            sketch.updated_at = now
 
-            if try_infer and client and options:
-                answer = _infer_mcq_answer(client, question=card.question, options=options, model=model)
-                if answer:
-                    inferred += 1
-
-            if not answer and options:
-                answer = options[0]
-                defaulted += 1
-
-            if not answer:
-                continue
-
-            card.cloze_part = answer
-            card.updated_at = datetime.utcnow()
-            session.add(card)
-            updated += 1
-
+        session.add(sketch)
         session.commit()
-        return {
-            "scanned": len(missing_cards),
-            "updated": updated,
-            "inferred": inferred,
-            "defaulted": defaulted,
-        }
+        session.refresh(sketch)
+        return SketchOut(**sketch.dict())
+
+
+@app.delete("/cards/{card_id}/sketch")
+def delete_card_sketch(card_id: str):
+    with db.get_session() as session:
+        sketch = session.get(CardSketch, card_id)
+        if not sketch:
+            return {"deleted": False}
+        session.delete(sketch)
+        session.commit()
+        return {"deleted": True}

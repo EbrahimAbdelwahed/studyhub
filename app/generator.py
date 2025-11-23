@@ -16,14 +16,19 @@ Produci SOLO JSON valido con una lista 'cards'. Ogni card è MULTIPLE CHOICE (MC
 - Per CLOZE usa una sola parola/numero per 'cloze_part' per validare la risposta.
 - Rispetta il tag DM418 indicato e il contesto del syllabus.
 - Domande concise, difficoltà medio-alta, niente trivia fuori syllabus.
+- Per espressioni matematiche/simboli usa LaTeX inline delimitato da $...$ (o \\(...\\)) così da essere renderizzato con KaTeX; non fare escape extra.
+- Aggiungi sempre un campo 'comment': breve spiegazione (2-3 frasi) che aiuti lo studente a ragionare e ricordare il concetto. Evita di ripetere integralmente la domanda; spiega come arrivare alla risposta corretta.
 Formato JSON di uscita:
+{
+  "cards": [
     {
       "type": "MCQ" | "CLOZE",
       "syllabus_ref": "<id unit>",
       "dm418_tag": "<TAG>",
       "question": "<testo>",
       "cloze_part": "<RISPOSTA CORRETTA ESATTA>",
-      "mcq_options": ["A", "B", "C", "D"] or null
+      "mcq_options": ["A", "B", "C", "D"] or null,
+      "comment": "<breve spiegazione>"
     }
   ]
 }
@@ -33,6 +38,13 @@ IMPORTANTE: Per le card MCQ, il campo 'cloze_part' DEVE contenere la stringa esa
 def _normalize_question(question: str) -> str:
     """Lowercase and collapse whitespace to spot near-identical questions."""
     return " ".join((question or "").lower().split())
+
+
+def _fallback_comment(question: str, correct: Optional[str], tag: str) -> str:
+    base = f"Ripassa il principio chiave legato a {tag.replace('_', ' ')} e applicalo alla traccia."
+    if correct:
+        return f"{base} La risposta corretta è '{correct}': ragiona su come i dati del testo portano a questo valore."
+    return f"{base} Individua le informazioni essenziali e collegale ai passaggi logici necessari."
 
 
 def _build_user_prompt(
@@ -141,6 +153,7 @@ def generate_cards(
     for c in payload_cards:
         cloze_value = c.get("cloze_part")
         mcq_options = c.get("mcq_options")
+        comment = c.get("comment")
         
         # Validation: MCQ must have a cloze_part (the correct answer)
         if c.get("type") == CardType.MCQ:
@@ -152,12 +165,15 @@ def generate_cards(
             # Ensure cloze_value matches one of the options; if not, default to first option
             if mcq_options and cloze_value not in mcq_options:
                 cloze_value = mcq_options[0]
+        if not comment:
+            comment = _fallback_comment(c.get("question") or "", cloze_value, c.get("dm418_tag", ""))
 
         card = Card(
             syllabus_ref=c["syllabus_ref"],
             dm418_tag=c["dm418_tag"],
             type=c["type"],
             question=c["question"],
+            comment=comment,
             cloze_part=cloze_value,
             mcq_options=mcq_options,
             state=CardState.NEW,

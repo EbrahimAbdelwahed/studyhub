@@ -43,6 +43,7 @@ class Card(SQLModel, table=True):
     dm418_tag: str
     type: str
     question: str
+    comment: Optional[str] = None
     cloze_part: Optional[str] = None
     mcq_options: Optional[List[str]] = Field(default=None, sa_column=Column(JSON))
     state: str = Field(default=CardState.NEW)
@@ -61,6 +62,8 @@ class Attempt(SQLModel, table=True):
     card_id: str = Field(foreign_key="card.card_id")
     outcome: str  # correct | wrong | skip
     duration_s: float
+    given_answer: Optional[str] = None
+    comment: Optional[str] = None
     created_at: datetime = Field(default_factory=_utcnow)
 
 
@@ -74,4 +77,10 @@ class GeneratorJob(SQLModel, table=True):
     payload: Optional[Dict[str, Any]] = Field(default=None, sa_column=Column(JSON))
     error: Optional[str] = None
     created_at: datetime = Field(default_factory=_utcnow)
+    updated_at: datetime = Field(default_factory=_utcnow)
+
+
+class CardSketch(SQLModel, table=True):
+    card_id: str = Field(primary_key=True, foreign_key="card.card_id")
+    data_url: str
     updated_at: datetime = Field(default_factory=_utcnow)

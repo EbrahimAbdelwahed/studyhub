@@ -2,7 +2,9 @@ import React, { useState, useEffect, useCallback } from 'react';
 import client from '../api/client';
 import Card from '../components/Card';
 import Select from '../components/Select';
-import { Loader2, RefreshCw } from 'lucide-react';
+import SketchBox from '../components/SketchBox';
+import Timer from '../components/Timer';
+import { Loader2, RefreshCw, Layers } from 'lucide-react';
 import '../styles/global.css';
 
 const Drill = () => {
@@ -37,21 +39,37 @@ const Drill = () => {
         fetchCards();
     }, [fetchCards]);
 
+    const [feedback, setFeedback] = useState(null);
+
     const handleAnswer = async (outcome, duration) => {
         const card = queue[currentCardIndex];
-
-        // Optimistic update: Move to next card immediately after animation
-        // But we need to submit the answer.
+        let comment = null;
 
         try {
-            await client.post(`/cards/${card.card_id}/answer`, {
+            const res = await client.post(`/cards/${card.card_id}/answer`, {
                 outcome,
                 duration_s: duration
             });
+            if (res.data.comment) {
+                comment = res.data.comment;
+            }
         } catch (err) {
             console.error('Failed to submit answer', err);
         }
 
+        if (outcome === 'wrong' || outcome === 'skip') {
+            // Show feedback and wait for user to proceed
+            setFeedback(comment || "Review the concept before moving on.");
+        } else {
+            // Correct answer, move to next after short delay
+            setTimeout(() => {
+                nextCard();
+            }, 1000);
+        }
+    };
+
+    const nextCard = () => {
+        setFeedback(null);
         if (currentCardIndex < queue.length - 1) {
             setCurrentCardIndex(prev => prev + 1);
         } else {
@@ -135,16 +153,25 @@ const Drill = () => {
                 </div>
             </div>
 
-            {currentCard && (
-                <Card
-                    card={currentCard}
-                    onAnswer={handleAnswer}
-                />
-            )}
-
-            <div className="queue-status">
-                Card {currentCardIndex + 1} of {queue.length}
+            <div className="flex justify-between items-center px-4 mb-4">
+                <Timer isActive={!loading && queue.length > 0} />
+                <div className="queue-status flex items-center gap-2 text-muted font-mono">
+                    <Layers size={18} />
+                    <span>{queue.length - currentCardIndex} cards left</span>
+                </div>
             </div>
+
+            {currentCard && (
+                <>
+                    <Card
+                        card={currentCard}
+                        onAnswer={handleAnswer}
+                        feedback={feedback}
+                        onNext={nextCard}
+                    />
+                    <SketchBox cardId={currentCard.card_id} />
+                </>
+            )}
 
             <style>{`
         .drill-page {
