@@ -22,9 +22,14 @@ Produci SOLO JSON valido con una lista 'cards'. Ogni card è MULTIPLE CHOICE (MC
 
 - Lingua: italiano.
 - Per MCQ crea 4 opzioni, una sola corretta, ordina in modo plausibile.
-- Per CLOZE usa una sola parola/numero/formula breve per 'cloze_part'.
+- Per CLOZE:
+    - La risposta ('cloze_part') DEVE essere una singola parola, un numero o una formula MOLTO BREVE (max 16 caratteri).
+    - Se la risposta richiede una formula complessa o lunga, DEVI usare il tipo MCQ.
+    - Per le formule semplici in 'cloze_part', usa '*' per la moltiplicazione e '**' per l'elevamento a potenza (es. "m*a", "x**2"). NON usare LaTeX nel campo 'cloze_part' se è una formula matematica da digitare.
 - Rispetta il tag DM418 indicato e il contesto del syllabus.
-- Per espressioni matematiche/simboli usa LaTeX inline delimitato da $...$ (o \\(...\\)).
+- FORMATTAZIONE LATEX:
+    - Usa ESCLUSIVAMENTE $...$ per LaTeX inline e $$...$$ per LaTeX display.
+    - NON usare MAI \\(...\\) o \\[...\\] perché il parser non li supporta.
 - Aggiungi sempre un campo 'comment': breve spiegazione (2-3 frasi) che rinforzi il concetto o la regola.
 
 Esempi ideali:
@@ -58,6 +63,16 @@ Esempi ideali:
     "mcq_options": null,
     "comment": "La fosfofruttochinasi-1 (PFK-1) è il principale punto di controllo allosterico della glicolisi."
   }
+- Matematica (Formula Semplice Cloze):
+  {
+    "type": "CLOZE",
+    "syllabus_ref": "math_algebra",
+    "dm418_tag": "Prodotti notevoli",
+    "question": "Completa il quadrato di binomio: $(a+b)^2 = a^2 + 2ab + ...$",
+    "cloze_part": "b**2",
+    "mcq_options": null,
+    "comment": "Il quadrato di binomio è uguale al quadrato del primo termine, più il doppio prodotto, più il quadrato del secondo."
+  }
 
 Formato JSON di uscita:
 {
@@ -66,8 +81,8 @@ Formato JSON di uscita:
       "type": "MCQ" | "CLOZE",
       "syllabus_ref": "<id unit>",
       "dm418_tag": "<TAG>",
-      "question": "<testo>",
-      "cloze_part": "<RISPOSTA CORRETTA ESATTA>",
+      "question": "<testo con LaTeX $...$>",
+      "cloze_part": "<RISPOSTA CORRETTA ESATTA (max 16 chars)>",
       "mcq_options": ["A", "B", "C", "D"] or null,
       "comment": "<breve spiegazione>"
     }

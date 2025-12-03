@@ -2,81 +2,9 @@ import React, { useEffect, useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Check, X, ArrowRight, AlertTriangle, ChevronRight } from 'lucide-react';
 import { useSyllabus } from '../contexts/SyllabusContext';
-import katex from 'katex';
 import 'katex/dist/katex.min.css';
+import Latex from 'react-latex-next';
 import '../styles/global.css';
-
-const LatexRenderer = ({ text }) => {
-  const containerRef = useRef(null);
-
-  useEffect(() => {
-    if (containerRef.current) {
-      // Simple regex to find latex patterns like $...$ or $$...$$
-      // This is a basic implementation. For more complex mixing, a parser is better.
-      // But for now, let's assume the text might contain LaTeX.
-      // Actually, let's try to render the whole string if it contains typical latex delimiters,
-      // or just render it as HTML if we trust the source to be sanitized.
-      // A safer approach for mixed content:
-
-      const renderText = (content) => {
-        // Replace $$...$$ with display math and $...$ with inline math
-        // We can use a library like react-latex-next, but we installed katex directly.
-        // Let's do a manual split.
-
-        const parts = content.split(/(\$\$[\s\S]*?\$\$|\$[\s\S]*?\$)/g);
-        return parts.map((part, index) => {
-          if (part.startsWith('$$') && part.endsWith('$$')) {
-            const math = part.slice(2, -2);
-            try {
-              const html = katex.renderToString(math, { displayMode: true });
-              return <span key={index} dangerouslySetInnerHTML={{ __html: html }} />;
-            } catch (e) {
-              return <span key={index} className="text-red-500">Error</span>;
-            }
-          } else if (part.startsWith('$') && part.endsWith('$')) {
-            const math = part.slice(1, -1);
-            try {
-              const html = katex.renderToString(math, { displayMode: false });
-              return <span key={index} dangerouslySetInnerHTML={{ __html: html }} />;
-            } catch (e) {
-              return <span key={index} className="text-red-500">Error</span>;
-            }
-          }
-          return <span key={index}>{part}</span>;
-        });
-      };
-
-      // We can't easily return the array from useEffect, so we'll use a state or just render in the component body.
-    }
-  }, [text]);
-
-  // Simplified render:
-  const parts = text.split(/(\$\$[\s\S]*?\$\$|\$[\s\S]*?\$)/g);
-  return (
-    <span>
-      {parts.map((part, index) => {
-        if (part.startsWith('$$') && part.endsWith('$$')) {
-          const math = part.slice(2, -2);
-          try {
-            const html = katex.renderToString(math, { displayMode: true });
-            return <span key={index} dangerouslySetInnerHTML={{ __html: html }} />;
-          } catch (e) {
-            return <span key={index} className="text-red-500">Error rendering math</span>;
-          }
-        } else if (part.startsWith('$') && part.endsWith('$')) {
-          const math = part.slice(1, -1);
-          try {
-            const html = katex.renderToString(math, { displayMode: false });
-            return <span key={index} dangerouslySetInnerHTML={{ __html: html }} />;
-          } catch (e) {
-            return <span key={index} className="text-red-500">Error rendering math</span>;
-          }
-        }
-        return <span key={index}>{part}</span>;
-      })}
-    </span>
-  );
-};
 
 const Card = ({ card, onAnswer, feedback, onNext }) => {
   const [answer, setAnswer] = useState('');
@@ -156,7 +84,7 @@ const Card = ({ card, onAnswer, feedback, onNext }) => {
           ) : (
             <>
               <div className="question">
-                <LatexRenderer text={card.question} />
+                <Latex>{card.question}</Latex>
               </div>
 
               <div className="input-area">
@@ -180,7 +108,7 @@ const Card = ({ card, onAnswer, feedback, onNext }) => {
                         className={`mcq-option ${answer === option ? 'selected' : ''}`}
                         disabled={status !== 'idle'}
                       >
-                        {option.startsWith('$') ? <LatexRenderer text={option} /> : option}
+                        <Latex>{option}</Latex>
                       </button>
                     ))}
                   </div>
@@ -221,10 +149,10 @@ const Card = ({ card, onAnswer, feedback, onNext }) => {
               className="feedback-wrong"
             >
               <div className="mb-2 font-bold">Feedback:</div>
-              <LatexRenderer text={feedback} />
+              <Latex>{feedback}</Latex>
               {card.cloze_part && (
                 <div className="mt-2 text-sm text-muted">
-                  Correct answer: <strong>{card.cloze_part}</strong>
+                  Correct answer: <strong><Latex>{card.cloze_part}</Latex></strong>
                 </div>
               )}
             </motion.div>
