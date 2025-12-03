@@ -11,79 +11,52 @@ from .models import Card, CardType, CardState, SyllabusUnit
 from .scheduler import ensure_next_review
 
 
-SYSTEM_PROMPT = """Sei un generatore di quesiti per l'ammissione a Medicina/Odontoiatria/Veterinaria.
+SYSTEM_PROMPT = """Sei un generatore di flashcards per l'ammissione a Medicina/Odontoiatria/Veterinaria.
 Produci SOLO JSON valido con una lista 'cards'. Ogni card è MULTIPLE CHOICE (MCQ) o CLOZE.
-- Prima pensa passo-passo (senza stampare il reasoning) su come costruire un esercizio realistico, poi restituisci solo il JSON finale.
+- Obiettivo: Generare card per il ripasso rapido e il consolidamento di concetti.
+- NON generare problemi complessi, calcoli lunghi o scenari intricati.
+- Focalizzati su:
+    1. CONCETTI TEORICI: Definizioni, principi, leggi, classificazioni, eccezioni.
+    2. FORMULE: Richiesta della formula corretta, unità di misura, relazioni di proporzionalità (es. "Se raddoppia il raggio, come cambia la resistenza?").
+    3. ARCHETIPI DI RISOLUZIONE: Step logici per risolvere tipologie standard di esercizi (es. "Qual è il primo passaggio per bilanciare una redox in ambiente acido?", "Quale legge di conservazione si applica in un urto anelastico?").
+
 - Lingua: italiano.
 - Per MCQ crea 4 opzioni, una sola corretta, ordina in modo plausibile.
-- Per CLOZE usa una sola parola/numero per 'cloze_part' per validare la risposta.
+- Per CLOZE usa una sola parola/numero/formula breve per 'cloze_part'.
 - Rispetta il tag DM418 indicato e il contesto del syllabus.
-- Domande scenario-based, difficoltà medio-alta: richiedi 1-3 passaggi di ragionamento/calcolo, evita definizioni banali o pura memoria.
-- Per numeri e risultati usa al massimo 3 cifre significative; evita precisioni irrealistiche (mai 5+ cifre).
-- Ordina le opzioni MCQ in modo da mescolare la corretta (non deve essere sempre la prima); tutte le opzioni devono sembrare plausibili.
-- Per espressioni matematiche/simboli usa LaTeX inline delimitato da $...$ (o \\(...\\)) così da essere renderizzato con KaTeX; non fare escape extra.
-- Aggiungi sempre un campo 'comment': breve spiegazione (2-3 frasi) che aiuti lo studente a ragionare e ricordare il concetto. Evita di ripetere integralmente la domanda; spiega come arrivare alla risposta corretta.
+- Per espressioni matematiche/simboli usa LaTeX inline delimitato da $...$ (o \\(...\\)).
+- Aggiungi sempre un campo 'comment': breve spiegazione (2-3 frasi) che rinforzi il concetto o la regola.
 
-Esempi reali (stile):
-- Fisica MCQ:
+Esempi ideali:
+- Fisica (Formula/Relazione):
   {
     "type": "MCQ",
-    "syllabus_ref": "phys_units_vectors",
-    "dm418_tag": "Oscillazioni e molle",
-    "question": "Una molla orizzontale (massa trascurabile) ha attaccato un cubetto di legno di massa m=7 kg. Il periodo di oscillazione è T=\\pi/3 s. Quanto vale k in SI?",
-    "cloze_part": "252",
-    "mcq_options": ["252\\pi", "126", "28", "252"],
-    "comment": "T=2\\pi\\sqrt{m/k} → k=4\\pi^2 m / T^2. Con m=7 kg e T=\\pi/3, k≈252 N/m."
+    "syllabus_ref": "phys_fluid_dynamics",
+    "dm418_tag": "Fluidodinamica",
+    "question": "Nell'equazione di continuità per un fluido ideale, come varia la velocità $v$ se la sezione $S$ del condotto si dimezza?",
+    "cloze_part": "Raddoppia",
+    "mcq_options": ["Raddoppia", "Dimezza", "Quadruplica", "Resta invariata"],
+    "comment": "L'equazione è $S_1 v_1 = S_2 v_2$. Se $S_2 = S_1/2$, allora $v_2 = 2v_1$."
   }
-- Fisica CLOZE:
-  {
-    "type": "CLOZE",
-    "syllabus_ref": "phys_fluids_archimede",
-    "dm418_tag": "Galleggiamento e densità",
-    "question": "Una zattera di legno (densità 0.8 g/cm^3) di base 4 m e altezza 0.50 m galleggia in acqua. Quale percentuale dell'altezza è immersa?",
-    "cloze_part": "80",
-    "mcq_options": null,
-    "comment": "Spinta di Archimede → immersione = densità_relativa = 0.8. L'80% dell'altezza è sotto il pelo dell'acqua."
-  }
-- Chimica MCQ:
+- Chimica (Teoria/Eccezione):
   {
     "type": "MCQ",
-    "syllabus_ref": "chem_inorganic_nomenclature",
-    "dm418_tag": "Sali e nomenclatura inorganica",
-    "question": "Quale tra le seguenti è la formula chimica del solfato di bario?",
-    "cloze_part": "BaSO4",
-    "mcq_options": ["BaSO4", "BaSO3", "BaS", "BaHSO4"],
-    "comment": "Il solfato è SO4^2− e il bario è Ba^2+: si combinano 1:1 → BaSO4."
+    "syllabus_ref": "chem_periodic_table",
+    "dm418_tag": "Proprietà periodiche",
+    "question": "Quale tra i seguenti elementi ha l'energia di prima ionizzazione più elevata?",
+    "cloze_part": "Elio",
+    "mcq_options": ["Elio", "Idrogeno", "Fluoro", "Neon"],
+    "comment": "L'Elio ha la configurazione stabile $1s^2$ e il raggio atomico più piccolo, rendendo difficilissima la rimozione di un elettrone."
   }
-- Chimica CLOZE:
+- Biologia (Archetipo/Processo):
   {
     "type": "CLOZE",
-    "syllabus_ref": "chem_electrochemistry",
-    "dm418_tag": "Elettrochimica e termodinamica",
-    "question": "La relazione tra ΔG e il potenziale di cella elettrochimica E è ΔG = …",
-    "cloze_part": "-nFE",
+    "syllabus_ref": "bio_metabolism",
+    "dm418_tag": "Glicolisi",
+    "question": "Qual è l'enzima chiave che regola la velocità della glicolisi catalizzando la fosforilazione del fruttosio-6-fosfato?",
+    "cloze_part": "Fosfofruttochinasi",
     "mcq_options": null,
-    "comment": "Per una cella, la variazione di energia libera è legata al lavoro elettrico: ΔG = -nFE."
-  }
-- Biologia MCQ:
-  {
-    "type": "MCQ",
-    "syllabus_ref": "bio_genetics",
-    "dm418_tag": "Genetica mendeliana e estensioni",
-    "question": "Il sistema dei gruppi sanguigni AB0 è un classico esempio di:",
-    "cloze_part": "Codominanza",
-    "mcq_options": ["Codominanza", "Dominanza incompleta", "Eredità poligenica", "Penetranza incompleta"],
-    "comment": "Gli alleli IA e IB sono entrambi espressi: fenotipo AB → codominanza."
-  }
-- Biologia CLOZE:
-  {
-    "type": "CLOZE",
-    "syllabus_ref": "bio_citologia_mitosi",
-    "dm418_tag": "Ciclo cellulare e mitosi",
-    "question": "Lo stadio mitotico in cui i cromosomi si allineano sulla piastra equatoriale è …, quello in cui iniziano a separarsi è …",
-    "cloze_part": "metafase, anafase",
-    "mcq_options": null,
-    "comment": "Metafase: allineamento; anafase: separazione delle cromatidi."
+    "comment": "La fosfofruttochinasi-1 (PFK-1) è il principale punto di controllo allosterico della glicolisi."
   }
 
 Formato JSON di uscita:
@@ -202,7 +175,8 @@ def _build_user_prompt(
 ) -> str:
     lines = []
     lines.append(f"Genera {num_cards} card aderenti al syllabus DM418.")
-    lines.append("Rendi le domande scenario-based con dati/valori realistici e almeno 2 passaggi di ragionamento; evita definizioni banali.")
+    lines.append("Focalizzati su TEORIA, FORMULE e ARCHETIPI DI RISOLUZIONE.")
+    lines.append("EVITA ASSOLUTAMENTE problemi con calcoli complessi o scenari lunghi.")
     lines.append("Imposta sempre dm418_tag uguale al topic principale (prima voce in 'topics') della unit del syllabus usata.")
     lines.append("Pensa brevemente prima di scrivere il JSON e poi restituisci solo il JSON.")
     if tags:
@@ -407,10 +381,11 @@ def generate_ideas(
 ) -> List[Dict[str, Any]]:
     client = _get_client()
     lines = []
-    lines.append(f"Proponi {num_ideas} idee di esercizi/QCM aderenti al syllabus DM418.")
+    lines.append(f"Proponi {num_ideas} idee di flashcards (Teoria, Formule, Archetipi) aderenti al syllabus DM418.")
     if tags:
         lines.append(f"Dai priorità a questi topic/tag: {', '.join(tags)}.")
     lines.append("Non scrivere le domande complete; fornisci solo un breve brief per ciascuna idea (1-2 frasi) con il focus concettuale.")
+    lines.append("Evita idee per problemi complessi o calcoli lunghi.")
     lines.append("Output JSON: {\"ideas\": [ {\"syllabus_ref\": \"...\", \"topic\": \"...\", \"idea\": \"breve descrizione\"} ] }")
     lines.append("Syllabus selezionato:")
     for u in units:
@@ -423,7 +398,7 @@ def generate_ideas(
             temperature=0.3,
             response_format={"type": "json_object"},
             messages=[
-                {"role": "system", "content": "Sei un planner di esercizi. Genera idee compatte per esercizi QCM/CLOZE, senza fornire testo completo."},
+                {"role": "system", "content": "Sei un planner di flashcards. Genera idee compatte per card di Teoria, Formule o Archetipi."},
                 {"role": "user", "content": prompt},
             ],
         )
