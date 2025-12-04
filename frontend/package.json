@@ -18,9 +18,12 @@
     "react-dom": "^19.2.0",
     "react-is": "^19.2.1",
     "react-latex-next": "^3.0.0",
+    "react-markdown": "^10.1.0",
     "react-router-dom": "^7.9.6",
     "react-sketch-canvas": "^6.2.0",
-    "recharts": "^3.4.1"
+    "recharts": "^3.4.1",
+    "rehype-katex": "^7.0.1",
+    "remark-math": "^6.0.0"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.1",

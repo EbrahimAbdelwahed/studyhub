@@ -8,6 +8,7 @@ import Syllabus from './pages/Syllabus';
 import Generator from './pages/Generator';
 import GeneratorHistory from './pages/GeneratorHistory';
 import Library from './pages/Library';
+import Quiz from './pages/Quiz';
 import { SyllabusProvider } from './contexts/SyllabusContext';
 
 const App = () => {
@@ -22,6 +23,7 @@ const App = () => {
           <Route path="/generator" element={<Generator />} />
           <Route path="/generator/history" element={<GeneratorHistory />} />
           <Route path="/library" element={<Library />} />
+          <Route path="/quiz" element={<Quiz />} />
         </Routes>
       </Layout>
     </SyllabusProvider>

@@ -13,6 +13,7 @@ from .analytics import mastery_by_syllabus, error_taxonomy, velocity_trend
 from .generator import generate_cards, generate_unique_cards, generate_ideas, generate_card_from_idea
 from .models import Card, CardState, Attempt, CardSketch, GeneratorJob, SyllabusUnit
 from .scheduler import ensure_next_review, update_card_state
+from .quiz_service import get_quiz_service, QuizProblem
 
 
 from fastapi.middleware.cors import CORSMiddleware
@@ -630,6 +631,13 @@ def delete_card_sketch(card_id: str):
         session.delete(sketch)
         session.commit()
         return {"deleted": True}
+
+
+@app.get("/quiz/generate", response_model=List[QuizProblem])
+def generate_quiz():
+    service = get_quiz_service()
+    return service.generate_quiz()
+
 def _process_generator_job(job_id: int, request: GeneratorRequest):
     # Background worker: per-card generation to avoid long synchronous requests.
     with db.get_session() as session:

@@ -27,9 +27,13 @@ Produci SOLO JSON valido con una lista 'cards'. Ogni card è MULTIPLE CHOICE (MC
     - Se la risposta richiede una formula complessa o lunga, DEVI usare il tipo MCQ.
     - Per le formule semplici in 'cloze_part', usa '*' per la moltiplicazione e '**' per l'elevamento a potenza (es. "m*a", "x**2"). NON usare LaTeX nel campo 'cloze_part' se è una formula matematica da digitare.
 - Rispetta il tag DM418 indicato e il contesto del syllabus.
-- FORMATTAZIONE LATEX:
+- FORMATTAZIONE LATEX (CRUCIALE):
     - Usa ESCLUSIVAMENTE $...$ per LaTeX inline e $$...$$ per LaTeX display.
     - NON usare MAI \\(...\\) o \\[...\\] perché il parser non li supporta.
+    - Assicurati di usare il BACKSLASH per i comandi (es. `\\frac`, `\\rho`, `\\sqrt`). NON scrivere `frac`, `rho`, `sqrt` senza backslash.
+    - Separa le variabili con spazi se necessario per evitare che si fondano (es. `\\rho v L` invece di `rhovL`).
+    - Esempio CORRETTO: $Re = \\frac{\\rho v L}{\\eta}$
+    - Esempio ERRATO: $Re = frac{rhovL}{eta}$ (mancano backslash e spazi)
 - Aggiungi sempre un campo 'comment': breve spiegazione (2-3 frasi) che rinforzi il concetto o la regola.
 
 Esempi ideali:

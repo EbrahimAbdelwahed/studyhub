@@ -9,10 +9,8 @@ frontend/dist/
 analysis.py
 extraction.py
 fix_cards.py
-analysis_progress.jsonl
-full_book_raw.md
 physics_final_database.json
-fix_cards_v2.py
+
 fisica(8).pdf
 venv_stable/
 Eserciziario Edises - Fisica.pdf
