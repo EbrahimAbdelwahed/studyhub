@@ -127,7 +127,22 @@ class SyllabusOut(BaseModel):
     subject: Optional[str] = None
     source: Optional[str] = None
     total_cfu: Optional[int] = None
+    total_cfu: Optional[int] = None
     meta_version: Optional[str] = None
+
+
+class GeneratorJobOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    id: Optional[int] = None
+    status: str
+    requested_tags: Optional[List[str]] = None
+    requested_units: Optional[List[str]] = None
+    num_cards: int = 0
+    model: str = "gpt-5.1"
+    payload: Optional[dict] = None
+    error: Optional[str] = None
+    created_at: datetime
+    updated_at: datetime
 
 
 LOOKAHEAD = timedelta(minutes=5)
@@ -340,8 +355,8 @@ def run_generator_async(request: GeneratorRequest, background_tasks: BackgroundT
     return GeneratorResponse(created=0, job_id=job.id, skipped_duplicates=0)
 
 
-@app.get("/generator/jobs", response_model=List[GeneratorJob])
-@app.get("/api/generator/jobs", response_model=List[GeneratorJob])  # alias for double-prefix setups
+@app.get("/generator/jobs", response_model=List[GeneratorJobOut])
+@app.get("/api/generator/jobs", response_model=List[GeneratorJobOut])  # alias for double-prefix setups
 def list_generator_jobs(limit: int = 20):
     with db.get_session() as session:
         jobs = session.exec(select(GeneratorJob).order_by(GeneratorJob.created_at.desc()).limit(limit)).all()
@@ -635,8 +650,13 @@ def delete_card_sketch(card_id: str):
 
 @app.get("/quiz/generate", response_model=List[QuizProblem])
 def generate_quiz():
-    service = get_quiz_service()
-    return service.generate_quiz()
+    try:
+        service = get_quiz_service()
+        return service.generate_quiz()
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=f"Quiz generation failed: {str(e)}")
 
 def _process_generator_job(job_id: int, request: GeneratorRequest):
     # Background worker: per-card generation to avoid long synchronous requests.
