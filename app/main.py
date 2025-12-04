@@ -250,8 +250,7 @@ def run_generator(request: GeneratorRequest):
     unit_ids = list(unit_lookup.keys())
 
     with db.get_session() as session:
-        existing_questions_raw = session.exec(select(Card.question).where(Card.syllabus_ref.in_(unit_ids))).all()
-        existing_questions = [q[0] if isinstance(q, tuple) else q for q in existing_questions_raw]
+        existing_questions = session.exec(select(Card.question).where(Card.syllabus_ref.in_(unit_ids))).scalars().all()
 
     try:
         if request.two_stage:
@@ -650,8 +649,7 @@ def _process_generator_job(job_id: int, request: GeneratorRequest):
             return
 
     unit_lookup = {u.id: u for u in units}
-    existing_questions_raw = session.exec(select(Card.question).where(Card.syllabus_ref.in_(list(unit_lookup.keys())))).all()
-    existing_questions = [q[0] if isinstance(q, tuple) else q for q in existing_questions_raw]
+    existing_questions = session.exec(select(Card.question).where(Card.syllabus_ref.in_(list(unit_lookup.keys())))).scalars().all()
 
     created = 0
     skipped = 0

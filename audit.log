@@ -1,0 +1,226 @@
+2025-12-03 18:10:53,618 [INFO] Starting LLM-Based Flashcard Audit (v2)...
+2025-12-03 18:10:58,047 [INFO] Found 90 cards to audit.
+2025-12-03 18:10:58,047 [INFO] Progress: [1/90] Auditing 046e98c8-37c7-45b5-ae08-4100c1427cdb...
+2025-12-03 18:10:59,914 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-12-03 18:11:00,964 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-12-03 18:11:02,367 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-12-03 18:11:04,312 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-12-03 18:11:05,645 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-12-03 18:11:05,851 [INFO] Progress: [6/90] Auditing 8d8ff6b5-3975-4a9b-aefb-9750e19b7d57...
+2025-12-03 18:11:06,975 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-12-03 18:11:08,032 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-12-03 18:11:09,332 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-12-03 18:11:13,592 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-12-03 18:11:13,595 [WARNING] [INVALID] 0382d883-5d20-4ef0-9cd6-ff10988fd4d3: Il LaTeX usa backslash doppi (\\) invece di singoli (\), quindi non è direttamente renderizzabile come LaTeX valido.
+2025-12-03 18:11:13,595 [INFO] Fixing card 0382d883-5d20-4ef0-9cd6-ff10988fd4d3 (Reason: Il LaTeX usa backslash doppi (\\) invece di singoli (\), quindi non è direttamente renderizzabile come LaTeX valido.)...
+2025-12-03 18:11:17,458 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-12-03 18:11:19,072 [INFO] [FIXED] Card 0382d883-5d20-4ef0-9cd6-ff10988fd4d3 updated.
+2025-12-03 18:11:20,266 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-12-03 18:11:20,593 [INFO] Progress: [11/90] Auditing 1cbaa0d2-ea4b-421a-8923-2390c0b41dcd...
+2025-12-03 18:11:21,641 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-12-03 18:11:22,789 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-12-03 18:11:23,940 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-12-03 18:11:25,312 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-12-03 18:11:26,790 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-12-03 18:11:27,183 [INFO] Progress: [16/90] Auditing 88c4df39-2927-4945-96d2-e6666af0e2e2...
+2025-12-03 18:11:28,133 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-12-03 18:11:30,229 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-12-03 18:11:30,233 [WARNING] [INVALID] 0b04a04c-22cf-4c60-b00a-4a3e116bcc18: Uso di \dfrac in LaTeX, che non è standard in modalità matematica base; dovrebbe essere \frac per garantire compatibilità e renderizzazione corretta.
+2025-12-03 18:11:30,233 [INFO] Fixing card 0b04a04c-22cf-4c60-b00a-4a3e116bcc18 (Reason: Uso di \dfrac in LaTeX, che non è standard in modalità matematica base; dovrebbe essere \frac per garantire compatibilità e renderizzazione corretta.)...
+2025-12-03 18:11:32,807 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-12-03 18:11:34,442 [INFO] [FIXED] Card 0b04a04c-22cf-4c60-b00a-4a3e116bcc18 updated.
+2025-12-03 18:11:36,060 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-12-03 18:11:36,063 [WARNING] [INVALID] dab3d103-8289-4178-8371-793bf10614b1: LaTeX non valido: il comando per il vettore è scritto come `vec` invece di `\vec`, quindi il codice non è renderizzabile correttamente.
+2025-12-03 18:11:36,063 [INFO] Fixing card dab3d103-8289-4178-8371-793bf10614b1 (Reason: LaTeX non valido: il comando per il vettore è scritto come `vec` invece di `\vec`, quindi il codice non è renderizzabile correttamente.)...
+2025-12-03 18:11:38,420 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-12-03 18:11:38,949 [INFO] [FIXED] Card dab3d103-8289-4178-8371-793bf10614b1 updated.
+2025-12-03 18:11:41,361 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-12-03 18:11:42,510 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-12-03 18:11:42,818 [INFO] Progress: [21/90] Auditing 4eeee0d6-cd20-4ee0-85a7-4e84a5dd839b...
+2025-12-03 18:11:43,778 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-12-03 18:11:45,274 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-12-03 18:11:46,634 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-12-03 18:11:47,856 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-12-03 18:11:49,047 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-12-03 18:11:49,433 [INFO] Progress: [26/90] Auditing c1ef25f7-81a3-41d4-9680-1e17bc289414...
+2025-12-03 18:11:50,293 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-12-03 18:11:51,622 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-12-03 18:11:52,852 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-12-03 18:11:54,346 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-12-03 18:11:57,130 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-12-03 18:11:57,131 [WARNING] [INVALID] 2c54d404-0667-4060-a37d-cdc94c5bb5fa: Usa i delimitatori LaTeX `\text{}` senza essere racchiuso in `$...$` o `$$...$$`, quindi il LaTeX non è renderizzabile correttamente.
+2025-12-03 18:11:57,132 [INFO] Fixing card 2c54d404-0667-4060-a37d-cdc94c5bb5fa (Reason: Usa i delimitatori LaTeX `\text{}` senza essere racchiuso in `$...$` o `$$...$$`, quindi il LaTeX non è renderizzabile correttamente.)...
+2025-12-03 18:11:59,598 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-12-03 18:12:00,319 [INFO] [FIXED] Card 2c54d404-0667-4060-a37d-cdc94c5bb5fa updated.
+2025-12-03 18:12:00,634 [INFO] Progress: [31/90] Auditing 26ebb81f-9fca-4166-bd1e-695ea67811a0...
+2025-12-03 18:12:01,491 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-12-03 18:12:02,889 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-12-03 18:12:04,162 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-12-03 18:12:05,446 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-12-03 18:12:06,571 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-12-03 18:12:06,881 [INFO] Progress: [36/90] Auditing 4fb9838f-e295-42ee-a48f-a65a1275b088...
+2025-12-03 18:12:07,796 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-12-03 18:12:09,030 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-12-03 18:12:10,156 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-12-03 18:12:11,489 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-12-03 18:12:12,616 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-12-03 18:12:12,928 [INFO] Progress: [41/90] Auditing a1fe0edc-a844-47ac-bf37-3f9aa6129a0e...
+2025-12-03 18:12:13,946 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-12-03 18:12:15,011 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-12-03 18:12:16,199 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-12-03 18:12:18,702 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-12-03 18:12:21,513 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-12-03 18:12:21,516 [WARNING] [INVALID] 90fd778e-7108-472b-8e98-71ef83f0ad3a: Uso del comando LaTeX \text con backslash singolo seguito da ellissi non valido; inoltre il LaTeX complessivo risulta malformato.
+2025-12-03 18:12:21,516 [INFO] Fixing card 90fd778e-7108-472b-8e98-71ef83f0ad3a (Reason: Uso del comando LaTeX \text con backslash singolo seguito da ellissi non valido; inoltre il LaTeX complessivo risulta malformato.)...
+2025-12-03 18:12:23,303 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-12-03 18:12:23,839 [INFO] [FIXED] Card 90fd778e-7108-472b-8e98-71ef83f0ad3a updated.
+2025-12-03 18:12:24,156 [INFO] Progress: [46/90] Auditing 0639ef9c-da5c-4453-a957-c2aa42d9e3d5...
+2025-12-03 18:12:25,669 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-12-03 18:12:25,670 [WARNING] [INVALID] 0639ef9c-da5c-4453-a957-c2aa42d9e3d5: Nelle opzioni MCQ il comando LaTeX \frac è scritto con due backslash (\\frac) invece di uno (\frac), rendendo il LaTeX non valido.
+2025-12-03 18:12:25,671 [INFO] Fixing card 0639ef9c-da5c-4453-a957-c2aa42d9e3d5 (Reason: Nelle opzioni MCQ il comando LaTeX \frac è scritto con due backslash (\\frac) invece di uno (\frac), rendendo il LaTeX non valido.)...
+2025-12-03 18:12:27,466 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-12-03 18:12:28,034 [INFO] [FIXED] Card 0639ef9c-da5c-4453-a957-c2aa42d9e3d5 updated.
+2025-12-03 18:12:29,615 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-12-03 18:12:29,617 [WARNING] [INVALID] ebb5022d-80cd-4669-8a34-696ccfd10ce8: LaTeX non valido: uso di `\\frac` invece di `\frac` e `\\text` invece di `\text`.
+2025-12-03 18:12:29,617 [INFO] Fixing card ebb5022d-80cd-4669-8a34-696ccfd10ce8 (Reason: LaTeX non valido: uso di `\\frac` invece di `\frac` e `\\text` invece di `\text`.)...
+2025-12-03 18:12:31,523 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-12-03 18:12:33,158 [INFO] [FIXED] Card ebb5022d-80cd-4669-8a34-696ccfd10ce8 updated.
+2025-12-03 18:12:34,633 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-12-03 18:12:36,271 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-12-03 18:12:36,274 [WARNING] [INVALID] 0bbd940e-9dbc-497e-8b8b-c6e0d8645f45: LaTeX con backslash doppi (\\omega, \\frac, ecc.) che non è valido/renderizzabile; va usato un solo backslash.
+2025-12-03 18:12:36,274 [INFO] Fixing card 0bbd940e-9dbc-497e-8b8b-c6e0d8645f45 (Reason: LaTeX con backslash doppi (\\omega, \\frac, ecc.) che non è valido/renderizzabile; va usato un solo backslash.)...
+2025-12-03 18:12:37,908 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-12-03 18:12:38,503 [INFO] [FIXED] Card 0bbd940e-9dbc-497e-8b8b-c6e0d8645f45 updated.
+2025-12-03 18:12:40,317 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-12-03 18:12:40,319 [WARNING] [INVALID] 5602e608-2021-412e-9dfb-c5943d52c2fd: LaTeX non valido: il comando \frac è scritto come \\frac (backslash raddoppiato), quindi non è renderizzabile correttamente.
+2025-12-03 18:12:40,319 [INFO] Fixing card 5602e608-2021-412e-9dfb-c5943d52c2fd (Reason: LaTeX non valido: il comando \frac è scritto come \\frac (backslash raddoppiato), quindi non è renderizzabile correttamente.)...
+2025-12-03 18:12:41,904 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-12-03 18:12:42,486 [INFO] [FIXED] Card 5602e608-2021-412e-9dfb-c5943d52c2fd updated.
+2025-12-03 18:12:42,798 [INFO] Progress: [51/90] Auditing 90979c2e-b962-4614-b927-6fc4d2a91e69...
+2025-12-03 18:12:44,194 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-12-03 18:12:44,195 [WARNING] [INVALID] 90979c2e-b962-4614-b927-6fc4d2a91e69: Nell’ultima opzione MCQ il LaTeX è errato: `\\frac` ha due backslash invece di uno (`\frac`).
+2025-12-03 18:12:44,195 [INFO] Fixing card 90979c2e-b962-4614-b927-6fc4d2a91e69 (Reason: Nell’ultima opzione MCQ il LaTeX è errato: `\\frac` ha due backslash invece di uno (`\frac`).)...
+2025-12-03 18:12:46,295 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-12-03 18:12:48,966 [INFO] [FIXED] Card 90979c2e-b962-4614-b927-6fc4d2a91e69 updated.
+2025-12-03 18:12:50,970 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-12-03 18:12:50,972 [WARNING] [INVALID] a8c51c7b-f6cb-4156-ba62-0ab1c323d4bf: Il LaTeX usa backslash doppi (\\) invece di singoli (\), quindi non è renderizzabile correttamente.
+2025-12-03 18:12:50,972 [INFO] Fixing card a8c51c7b-f6cb-4156-ba62-0ab1c323d4bf (Reason: Il LaTeX usa backslash doppi (\\) invece di singoli (\), quindi non è renderizzabile correttamente.)...
+2025-12-03 18:12:53,169 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-12-03 18:12:53,707 [INFO] [FIXED] Card a8c51c7b-f6cb-4156-ba62-0ab1c323d4bf updated.
+2025-12-03 18:12:55,685 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-12-03 18:12:55,687 [WARNING] [INVALID] 854e88fd-c484-4b93-be5e-447404e25caa: LaTeX non valido: uso di \\frac invece di \frac e sequenza \\, non corretta; inoltre la risposta cloze non deve contenere LaTeX nella domanda con parte nascosta complessa.
+2025-12-03 18:12:55,688 [INFO] Fixing card 854e88fd-c484-4b93-be5e-447404e25caa (Reason: LaTeX non valido: uso di \\frac invece di \frac e sequenza \\, non corretta; inoltre la risposta cloze non deve contenere LaTeX nella domanda con parte nascosta complessa.)...
+2025-12-03 18:12:57,654 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-12-03 18:12:58,321 [INFO] [FIXED] Card 854e88fd-c484-4b93-be5e-447404e25caa updated.
+2025-12-03 18:13:02,488 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-12-03 18:13:02,491 [WARNING] [INVALID] d07bf3d3-5c59-4921-add1-769fbb271c98: La risposta cloze numerica è ambigua/incompleta (mancano unità o specifica di g) e l’uso della virgola può creare problemi di formato; andrebbe specificato come valore fisico completo o riformulato.
+2025-12-03 18:13:02,491 [INFO] Fixing card d07bf3d3-5c59-4921-add1-769fbb271c98 (Reason: La risposta cloze numerica è ambigua/incompleta (mancano unità o specifica di g) e l’uso della virgola può creare problemi di formato; andrebbe specificato come valore fisico completo o riformulato.)...
+2025-12-03 18:13:06,781 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-12-03 18:13:07,341 [INFO] [FIXED] Card d07bf3d3-5c59-4921-add1-769fbb271c98 updated.
+2025-12-03 18:13:09,671 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-12-03 18:13:09,672 [WARNING] [INVALID] 5321b23a-b2f5-4749-a3e7-a9973e472556: LaTeX non valido: '\\frac' ha due backslash invece di uno; inoltre nella cloze la potenza è scritta come 't**2' ma manca l'operatore di moltiplicazione esplicito tra 'a' e 't' ('a*t**2' sarebbe corretto).
+2025-12-03 18:13:09,672 [INFO] Fixing card 5321b23a-b2f5-4749-a3e7-a9973e472556 (Reason: LaTeX non valido: '\\frac' ha due backslash invece di uno; inoltre nella cloze la potenza è scritta come 't**2' ma manca l'operatore di moltiplicazione esplicito tra 'a' e 't' ('a*t**2' sarebbe corretto).)...
+2025-12-03 18:13:11,064 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-12-03 18:13:11,599 [INFO] [FIXED] Card 5321b23a-b2f5-4749-a3e7-a9973e472556 updated.
+2025-12-03 18:13:11,911 [INFO] Progress: [56/90] Auditing e52e104c-c475-4740-9975-04ac6ed0a3cd...
+2025-12-03 18:13:12,691 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-12-03 18:13:14,779 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-12-03 18:13:16,003 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-12-03 18:13:17,233 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-12-03 18:13:19,182 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-12-03 18:13:19,183 [WARNING] [INVALID] 0a963384-34e2-46c5-b92e-2bcddb89f80b: Nel LaTeX è usato `\\` invece di `\` per andare a capo o separare termini; inoltre `\sin(\,\text{?}\,)` è sintassi sospetta e non standard. Il LaTeX non è chiaramente valido/renderizzabile.
+2025-12-03 18:13:19,183 [INFO] Fixing card 0a963384-34e2-46c5-b92e-2bcddb89f80b (Reason: Nel LaTeX è usato `\\` invece di `\` per andare a capo o separare termini; inoltre `\sin(\,\text{?}\,)` è sintassi sospetta e non standard. Il LaTeX non è chiaramente valido/renderizzabile.)...
+2025-12-03 18:13:20,743 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-12-03 18:13:21,278 [INFO] [FIXED] Card 0a963384-34e2-46c5-b92e-2bcddb89f80b updated.
+2025-12-03 18:13:21,589 [INFO] Progress: [61/90] Auditing 474daf54-a7d1-476d-a88e-ec89916091fe...
+2025-12-03 18:13:24,025 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-12-03 18:13:24,026 [WARNING] [INVALID] 474daf54-a7d1-476d-a88e-ec89916091fe: La domanda contiene LaTeX non valido: usa `\\text{?}` invece di `\text{?}` e il cloze dovrebbe essere una formula semplice in notazione tipo `m*g` anziché in forma implicita `mg`.
+2025-12-03 18:13:24,026 [INFO] Fixing card 474daf54-a7d1-476d-a88e-ec89916091fe (Reason: La domanda contiene LaTeX non valido: usa `\\text{?}` invece di `\text{?}` e il cloze dovrebbe essere una formula semplice in notazione tipo `m*g` anziché in forma implicita `mg`.)...
+2025-12-03 18:13:25,525 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-12-03 18:13:26,054 [INFO] [FIXED] Card 474daf54-a7d1-476d-a88e-ec89916091fe updated.
+2025-12-03 18:13:27,075 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-12-03 18:13:29,210 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-12-03 18:13:29,211 [WARNING] [INVALID] 49a6a9a3-8dfa-45fe-af3e-f0247d60f706: LaTeX non valido: uso di `\\text` invece di `\text` all'interno delle formule.
+2025-12-03 18:13:29,211 [INFO] Fixing card 49a6a9a3-8dfa-45fe-af3e-f0247d60f706 (Reason: LaTeX non valido: uso di `\\text` invece di `\text` all'interno delle formule.)...
+2025-12-03 18:13:32,659 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-12-03 18:13:33,197 [INFO] [FIXED] Card 49a6a9a3-8dfa-45fe-af3e-f0247d60f706 updated.
+2025-12-03 18:13:34,912 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-12-03 18:13:34,916 [WARNING] [INVALID] 9f244aaf-2f19-4ec8-81b5-db935ee353e2: Nel LaTeX è usato il comando \text{?} che non è valido: il punto interrogativo non è un identificatore testuale corretto e rende la formula non semanticamente corretta. Inoltre l’uso di \\, all’interno di $...$ è sospetto e può causare problemi di rendering.
+2025-12-03 18:13:34,916 [INFO] Fixing card 9f244aaf-2f19-4ec8-81b5-db935ee353e2 (Reason: Nel LaTeX è usato il comando \text{?} che non è valido: il punto interrogativo non è un identificatore testuale corretto e rende la formula non semanticamente corretta. Inoltre l’uso di \\, all’interno di $...$ è sospetto e può causare problemi di rendering.)...
+2025-12-03 18:13:36,448 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-12-03 18:13:36,980 [INFO] [FIXED] Card 9f244aaf-2f19-4ec8-81b5-db935ee353e2 updated.
+2025-12-03 18:13:38,938 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-12-03 18:13:38,939 [WARNING] [INVALID] 57c8d105-9164-4bf8-8ce2-ca5dc36080c2: Nel testo compaiono sequenze LaTeX con backslash doppiati (`$\\mu_d N$`); il LaTeX non è valido/renderizzabile in questa forma.
+2025-12-03 18:13:38,939 [INFO] Fixing card 57c8d105-9164-4bf8-8ce2-ca5dc36080c2 (Reason: Nel testo compaiono sequenze LaTeX con backslash doppiati (`$\\mu_d N$`); il LaTeX non è valido/renderizzabile in questa forma.)...
+2025-12-03 18:13:40,653 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-12-03 18:13:41,184 [INFO] [FIXED] Card 57c8d105-9164-4bf8-8ce2-ca5dc36080c2 updated.
+2025-12-03 18:13:41,493 [INFO] Progress: [66/90] Auditing 760d5106-2588-4128-8b18-44cd7ce78863...
+2025-12-03 18:13:42,978 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-12-03 18:13:42,980 [WARNING] [INVALID] 760d5106-2588-4128-8b18-44cd7ce78863: LaTeX non valido: nella terza opzione compaiono sequenze come `\u0001` che non sono comandi LaTeX validi e rendono la formula non renderizzabile.
+2025-12-03 18:13:42,980 [INFO] Fixing card 760d5106-2588-4128-8b18-44cd7ce78863 (Reason: LaTeX non valido: nella terza opzione compaiono sequenze come `\u0001` che non sono comandi LaTeX validi e rendono la formula non renderizzabile.)...
+2025-12-03 18:13:44,984 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-12-03 18:13:45,521 [INFO] [FIXED] Card 760d5106-2588-4128-8b18-44cd7ce78863 updated.
+2025-12-03 18:13:48,055 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-12-03 18:13:48,059 [WARNING] [INVALID] 8c250cbd-3cdb-4a58-af95-d3764b4d7cd2: Nel LaTeX sono presenti backslash doppi (\\) invece di singoli (\), quindi le formule non sono renderizzabili correttamente.
+2025-12-03 18:13:48,059 [INFO] Fixing card 8c250cbd-3cdb-4a58-af95-d3764b4d7cd2 (Reason: Nel LaTeX sono presenti backslash doppi (\\) invece di singoli (\), quindi le formule non sono renderizzabili correttamente.)...
+2025-12-03 18:13:50,205 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-12-03 18:13:50,733 [INFO] [FIXED] Card 8c250cbd-3cdb-4a58-af95-d3764b4d7cd2 updated.
+2025-12-03 18:13:52,681 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-12-03 18:13:52,683 [WARNING] [INVALID] c15eca10-0cab-4c2a-b646-bc170276a3be: Nel LaTeX è usato `\\frac` invece di `\frac`, rendendo la formula non valida.
+2025-12-03 18:13:52,683 [INFO] Fixing card c15eca10-0cab-4c2a-b646-bc170276a3be (Reason: Nel LaTeX è usato `\\frac` invece di `\frac`, rendendo la formula non valida.)...
+2025-12-03 18:13:54,813 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-12-03 18:13:55,340 [INFO] [FIXED] Card c15eca10-0cab-4c2a-b646-bc170276a3be updated.
+2025-12-03 18:13:58,191 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-12-03 18:13:58,192 [WARNING] [INVALID] 58dfe111-3cc1-452b-9361-6afbe1f7d28d: LaTeX non valido: uso di \\ invece di \ nei comandi (es. \\frac, \\,\\text) e virgola superflua nel comando \text. I backslash devono essere singoli e la sintassi corretta sarebbe ad esempio $P = \frac{L}{t}$.
+2025-12-03 18:13:58,192 [INFO] Fixing card 58dfe111-3cc1-452b-9361-6afbe1f7d28d (Reason: LaTeX non valido: uso di \\ invece di \ nei comandi (es. \\frac, \\,\\text) e virgola superflua nel comando \text. I backslash devono essere singoli e la sintassi corretta sarebbe ad esempio $P = \frac{L}{t}$.)...
+2025-12-03 18:14:00,034 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-12-03 18:14:00,580 [INFO] [FIXED] Card 58dfe111-3cc1-452b-9361-6afbe1f7d28d updated.
+2025-12-03 18:14:01,610 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-12-03 18:14:01,926 [INFO] Progress: [71/90] Auditing 6b726f25-a52a-4569-8d34-116704c124e7...
+2025-12-03 18:14:03,417 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-12-03 18:14:03,419 [WARNING] [INVALID] 6b726f25-a52a-4569-8d34-116704c124e7: LaTeX non valido: nelle opzioni compaiono `\\frac` invece di `\frac`.
+2025-12-03 18:14:03,419 [INFO] Fixing card 6b726f25-a52a-4569-8d34-116704c124e7 (Reason: LaTeX non valido: nelle opzioni compaiono `\\frac` invece di `\frac`.)...
+2025-12-03 18:14:05,974 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-12-03 18:14:06,523 [INFO] [FIXED] Card 6b726f25-a52a-4569-8d34-116704c124e7 updated.
+2025-12-03 18:14:10,463 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-12-03 18:14:10,465 [WARNING] [INVALID] 7f8cfd0b-89e8-4c3b-9c8a-05ce9bef287a: LaTeX non valido: nella formula è presente `\\frac` invece di `\frac` (backslash raddoppiato).
+2025-12-03 18:14:10,465 [INFO] Fixing card 7f8cfd0b-89e8-4c3b-9c8a-05ce9bef287a (Reason: LaTeX non valido: nella formula è presente `\\frac` invece di `\frac` (backslash raddoppiato).)...
+2025-12-03 18:14:13,040 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-12-03 18:14:13,590 [INFO] [FIXED] Card 7f8cfd0b-89e8-4c3b-9c8a-05ce9bef287a updated.
+2025-12-03 18:14:14,784 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-12-03 18:14:15,967 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-12-03 18:14:17,412 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-12-03 18:14:17,730 [INFO] Progress: [76/90] Auditing 9a2eda23-224d-480e-a684-22f15cdfa56c...
+2025-12-03 18:14:18,467 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-12-03 18:14:21,058 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-12-03 18:14:21,060 [WARNING] [INVALID] 41f4b780-0302-4162-821b-75be761ca4cd: LaTeX non valido: nella domanda compaiono backslash doppi (\\vec, \\text) invece di singoli (\vec, \text).
+2025-12-03 18:14:21,061 [INFO] Fixing card 41f4b780-0302-4162-821b-75be761ca4cd (Reason: LaTeX non valido: nella domanda compaiono backslash doppi (\\vec, \\text) invece di singoli (\vec, \text).)...
+2025-12-03 18:14:22,775 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-12-03 18:14:23,335 [INFO] [FIXED] Card 41f4b780-0302-4162-821b-75be761ca4cd updated.
+2025-12-03 18:14:24,608 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-12-03 18:14:26,485 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-12-03 18:14:26,487 [WARNING] [INVALID] 95142934-fcf3-4d85-a300-f3d3afac236e: LaTeX non valido: presenza di sequenze errate ($\\u0001E_m$, $L_{\\text{?}}$) e caratteri di escape superflui che rendono la formula non renderizzabile correttamente.
+2025-12-03 18:14:26,487 [INFO] Fixing card 95142934-fcf3-4d85-a300-f3d3afac236e (Reason: LaTeX non valido: presenza di sequenze errate ($\\u0001E_m$, $L_{\\text{?}}$) e caratteri di escape superflui che rendono la formula non renderizzabile correttamente.)...
+2025-12-03 18:14:28,683 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-12-03 18:14:29,232 [INFO] [FIXED] Card 95142934-fcf3-4d85-a300-f3d3afac236e updated.
+2025-12-03 18:14:30,412 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-12-03 18:14:31,674 [INFO] Progress: [81/90] Auditing 7b152509-78e8-4686-bab9-75f1c5a935e9...
+2025-12-03 18:14:33,007 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-12-03 18:14:35,263 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-12-03 18:14:36,284 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-12-03 18:14:37,644 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-12-03 18:14:38,764 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-12-03 18:14:39,080 [INFO] Progress: [86/90] Auditing 11fb9b92-5144-4e70-92f4-9eb5e29b5b2b...
+2025-12-03 18:14:40,296 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-12-03 18:14:41,611 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-12-03 18:14:42,931 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-12-03 18:14:44,626 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-12-03 18:14:44,628 [WARNING] [INVALID] 72bdd26e-188f-4d0d-8b43-a010c5e6a592: La risposta cloze contiene LaTeX e non rispetta la sintassi richiesta: deve essere una formula semplice in plain text con * e ** (es. 'omega**2'), senza dollari né backslash.
+2025-12-03 18:14:44,628 [INFO] Fixing card 72bdd26e-188f-4d0d-8b43-a010c5e6a592 (Reason: La risposta cloze contiene LaTeX e non rispetta la sintassi richiesta: deve essere una formula semplice in plain text con * e ** (es. 'omega**2'), senza dollari né backslash.)...
+2025-12-03 18:14:48,232 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-12-03 18:14:48,780 [INFO] [FIXED] Card 72bdd26e-188f-4d0d-8b43-a010c5e6a592 updated.
+2025-12-03 18:14:50,316 [INFO] HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-12-03 18:14:50,525 [INFO] Audit Complete.
+2025-12-03 18:14:50,525 [INFO] Valid: 62
+2025-12-03 18:14:50,525 [INFO] Fixed: 28
+2025-12-03 18:14:50,525 [INFO] Errors: 0

@@ -65,6 +65,12 @@ def needs_fix(card: Card) -> bool:
     if "\\(" in text_to_check or "\\[" in text_to_check:
         return True
 
+    # Check 3: Missing backslash for frac (common error)
+    # Looks for 'frac' not preceded by '\' and not preceded by 'd' (to allow \dfrac)
+    import re
+    if re.search(r"(?<!\\)(?<!d)frac", text_to_check):
+        return True
+
     return False
 
 def fix_card(card: Card) -> Optional[dict]:
